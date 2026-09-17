@@ -43,8 +43,8 @@ export function AuthModal({
       }
       setEmail("");
       setPassword("");
-      onAuthed?.();
-      onClose();
+      if (onAuthed) onAuthed();
+      else onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
