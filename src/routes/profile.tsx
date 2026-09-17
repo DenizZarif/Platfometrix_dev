@@ -222,7 +222,7 @@ function ProfilePage() {
           </div>
         )}
       </section>
-    </main>
+    </AppShell>
   );
 }
 
