@@ -2,8 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { STEPS, QUESTIONS, type Answers, type Question } from "@/lib/questions";
 import { CRM_STEPS, CRM_QUESTIONS } from "@/lib/questionsCrm";
+import { WAREHOUSE_STEPS, WAREHOUSE_QUESTIONS } from "@/lib/questionsWarehouse";
 import { matchTools } from "@/lib/matcher";
 import { matchCrmTools } from "@/lib/matcherCrm";
+import { matchWarehouseTools } from "@/lib/matcherWarehouse";
 import { cn } from "@/lib/utils";
 import { ResultCard, type ShortlistResult } from "@/components/ResultCard";
 import { AuthModal } from "@/components/AuthModal";
@@ -34,7 +36,7 @@ export const Route = createFileRoute("/")({
 });
 
 type Screen = "category" | "landing" | "quiz" | "results";
-type Category = "bi" | "crm";
+type Category = "bi" | "crm" | "warehouse";
 
 const CATEGORY_CONFIG: Record<
   Category,
@@ -79,6 +81,27 @@ const CATEGORY_CONFIG: Record<
       "This isn't another \"best CRM\" list — it's a personalized match scored against your budget, how your team sells and how much set-up you're willing to do.",
     headerNote: "CRM tool matcher",
   },
+  warehouse: {
+    label: "Data Warehousing & Pipelines",
+    tagline: "Where your analytical data lives, scales and gets loaded.",
+    steps: WAREHOUSE_STEPS,
+    questions: WAREHOUSE_QUESTIONS,
+    toolCount: 15,
+    headline: (
+      <>
+        Find the data warehouse that <span className="text-accent">actually fits</span> your team
+      </>
+    ),
+    blurb:
+      "This isn't another \"best data warehouse\" list — it's a personalized match scored against your scale, workload, cloud setup and how much infrastructure you want to manage.",
+    headerNote: "Data warehouse matcher",
+  },
+};
+
+const MATCHERS: Record<Category, (a: Answers) => ShortlistResult[]> = {
+  bi: matchTools,
+  crm: matchCrmTools,
+  warehouse: matchWarehouseTools,
 };
 
 function Index() {
@@ -107,7 +130,7 @@ function Index() {
 
   const results = useMemo<ShortlistResult[]>(() => {
     if (screen !== "results" || !category) return [];
-    return category === "bi" ? matchTools(answers) : matchCrmTools(answers);
+    return MATCHERS[category](answers);
   }, [screen, answers, category]);
 
   const doSave = useCallback(async () => {
@@ -238,7 +261,7 @@ function CategoryPicker({ onPick }: { onPick: (c: Category) => void }) {
         explained shortlist.
       </p>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2">
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(Object.keys(CATEGORY_CONFIG) as Category[]).map((c) => {
           const cfg = CATEGORY_CONFIG[c];
           return (
