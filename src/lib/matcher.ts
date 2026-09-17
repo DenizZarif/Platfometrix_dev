@@ -160,7 +160,7 @@ export function matchTools(answers: Answers): MatchResult[] {
       weight: (weights["report_builder_fit"] ?? 0),
       score: BUILDER_MAP[builderPref]?.[tool.report_builder] ?? 0.5,
       positive: `${BUILDER_LABEL[tool.report_builder] ?? ""} matches how your team wants to work`,
-      caveat: `Report building is ${x}, which isn't how you prefer to work`,
+      caveat: `Report building is ${(BUILDER_LABEL[tool.report_builder] ?? "").toLowerCase()}, which isn't how you prefer to work`,
     });
 
     push({
