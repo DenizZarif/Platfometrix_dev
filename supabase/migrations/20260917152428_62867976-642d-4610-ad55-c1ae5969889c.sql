@@ -1,0 +1,2 @@
+ALTER TABLE public.saved_results DROP CONSTRAINT IF EXISTS saved_results_category_check;
+ALTER TABLE public.saved_results ADD CONSTRAINT saved_results_category_check CHECK (category IN ('bi','crm','warehouse'));
