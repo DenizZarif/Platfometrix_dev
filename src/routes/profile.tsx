@@ -418,26 +418,3 @@ function CompanyDetails({ userId, profile }: { userId: string; profile: Profile 
     </section>
   );
 }
-
-function Header() {
-  return (
-    <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-      <Link to="/" className="font-display text-sm font-bold tracking-[0.2em] uppercase text-accent">
-        Platfometrix
-      </Link>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <Link to="/" className="text-accent">
-          New match
-        </Link>
-        <button
-          onClick={() => {
-            void supabase.auth.signOut();
-          }}
-          className="hover:text-foreground"
-        >
-          Log out
-        </button>
-      </div>
-    </header>
-  );
-}
