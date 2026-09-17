@@ -1,6 +1,7 @@
 import { CRM_TOOLS, type CrmTool } from "@/data/crmTools";
 import type { Answers } from "./questions";
 import type { CriterionResult } from "./matcher";
+import { estimateCrmCost, type CostEstimate } from "./costEstimate";
 
 export interface CrmMatchResult {
   tool: CrmTool;
@@ -8,6 +9,7 @@ export interface CrmMatchResult {
   criteria: CriterionResult[];
   fits: string[];
   caveat: string | null;
+  costEstimate: CostEstimate;
 }
 
 const CERT_MAP: Record<string, string> = {
@@ -257,6 +259,7 @@ export function matchCrmTools(answers: Answers): CrmMatchResult[] {
       criteria,
       fits: byContribution.slice(0, 2).map((c) => c.positive),
       caveat: lowest && lowest.score < 1 ? lowest.caveat : null,
+      costEstimate: estimateCrmCost(tool, answers["company_size"] as string | undefined),
     };
   });
 

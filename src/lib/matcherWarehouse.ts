@@ -1,6 +1,7 @@
 import { WAREHOUSE_TOOLS, type WarehouseTool } from "@/data/warehouseTools";
 import type { Answers } from "./questions";
 import type { CriterionResult } from "./matcher";
+import { estimateWarehouseCost, type CostEstimate } from "./costEstimate";
 
 export interface WarehouseMatchResult {
   tool: WarehouseTool;
@@ -8,6 +9,7 @@ export interface WarehouseMatchResult {
   criteria: CriterionResult[];
   fits: string[];
   caveat: string | null;
+  costEstimate: CostEstimate;
 }
 
 const CERT_MAP: Record<string, string> = {
@@ -346,6 +348,7 @@ export function matchWarehouseTools(answers: Answers): WarehouseMatchResult[] {
       criteria,
       fits: byContribution.slice(0, 2).map((c) => c.positive),
       caveat: lowest && lowest.score < 1 ? lowest.caveat : null,
+      costEstimate: estimateWarehouseCost(tool, answers["data_volume_scale"] as string | undefined),
     };
   });
 
