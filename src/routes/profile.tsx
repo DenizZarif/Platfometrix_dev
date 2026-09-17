@@ -136,6 +136,12 @@ function ProfilePage() {
 
       <section className="mx-auto max-w-3xl px-6 pb-24">
         <h1 className="font-display text-4xl font-bold tracking-tight">My profile</h1>
+
+        <CompanyDetails userId={user.id} profile={profile} />
+
+        <h2 className="font-display mt-20 text-2xl font-bold tracking-tight">
+          Matching preferences
+        </h2>
         <p className="mt-3 text-muted-foreground">
           These answers are reused whenever you start a new match, in any category.
         </p>
