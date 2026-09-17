@@ -17,28 +17,49 @@ export type Database = {
       profiles: {
         Row: {
           budget_range: string | null
+          company_name: string | null
           company_size: string | null
+          company_website: string | null
           compliance_needs: string[] | null
           customization_preference: string | null
+          digital_assets: string | null
+          existing_stack: string | null
+          growth_stage: string | null
           id: string
+          industry: string | null
+          job_title: string | null
           technical_maturity: string | null
           updated_at: string
         }
         Insert: {
           budget_range?: string | null
+          company_name?: string | null
           company_size?: string | null
+          company_website?: string | null
           compliance_needs?: string[] | null
           customization_preference?: string | null
+          digital_assets?: string | null
+          existing_stack?: string | null
+          growth_stage?: string | null
           id: string
+          industry?: string | null
+          job_title?: string | null
           technical_maturity?: string | null
           updated_at?: string
         }
         Update: {
           budget_range?: string | null
+          company_name?: string | null
           company_size?: string | null
+          company_website?: string | null
           compliance_needs?: string[] | null
           customization_preference?: string | null
+          digital_assets?: string | null
+          existing_stack?: string | null
+          growth_stage?: string | null
           id?: string
+          industry?: string | null
+          job_title?: string | null
           technical_maturity?: string | null
           updated_at?: string
         }
