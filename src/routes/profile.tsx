@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { QUESTIONS } from "@/lib/questions";
 import { cn } from "@/lib/utils";
 import { ResultCard } from "@/components/ResultCard";
 import { AuthModal } from "@/components/AuthModal";
+import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import {
   fetchProfile,
   listSavedResults,
@@ -66,13 +66,12 @@ function ProfilePage() {
   }, [user]);
 
   if (loading) {
-    return <main className="min-h-screen bg-background" />;
+    return <AppShell>{null}</AppShell>;
   }
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-background text-foreground">
-        <Header />
+      <AppShell>
         <section className="mx-auto max-w-2xl px-6 py-24 text-center">
           <h1 className="font-display text-3xl font-bold">Log in to see your profile</h1>
           <p className="mt-3 text-muted-foreground">
@@ -80,7 +79,7 @@ function ProfilePage() {
           </p>
         </section>
         <AuthModal open onClose={() => {}} />
-      </main>
+      </AppShell>
     );
   }
 
@@ -131,10 +130,8 @@ function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Header />
-
-      <section className="mx-auto max-w-3xl px-6 pb-24">
+    <AppShell>
+      <section className="mx-auto max-w-3xl px-6 pt-16 pb-24">
         <h1 className="font-display text-4xl font-bold tracking-tight">My profile</h1>
 
         <CompanyDetails userId={user.id} profile={profile} />
@@ -225,7 +222,7 @@ function ProfilePage() {
           </div>
         )}
       </section>
-    </main>
+    </AppShell>
   );
 }
 
@@ -419,28 +416,5 @@ function CompanyDetails({ userId, profile }: { userId: string; profile: Profile 
         )}
       </div>
     </section>
-  );
-}
-
-function Header() {
-  return (
-    <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-      <Link to="/" className="font-display text-sm font-bold tracking-[0.2em] uppercase text-accent">
-        Platfometrix
-      </Link>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <Link to="/" className="text-accent">
-          New match
-        </Link>
-        <button
-          onClick={() => {
-            void supabase.auth.signOut();
-          }}
-          className="hover:text-foreground"
-        >
-          Log out
-        </button>
-      </div>
-    </header>
   );
 }
