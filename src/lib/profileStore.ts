@@ -37,7 +37,9 @@ export interface SavedResultRow {
 export async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, company_size, budget_range, technical_maturity, compliance_needs, customization_preference")
+    .select(
+      "id, company_size, budget_range, technical_maturity, compliance_needs, customization_preference, company_name, job_title, industry, company_website, growth_stage, existing_stack, digital_assets",
+    )
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
