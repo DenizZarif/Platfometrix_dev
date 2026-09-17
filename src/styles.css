@@ -145,3 +145,94 @@
     color: var(--color-foreground);
   }
 }
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+}
+
+@layer components {
+  .btn-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+    padding: 0.85rem 1.75rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+  .btn-accent:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-muted-foreground);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-ghost:hover {
+    color: var(--color-foreground);
+    border-color: var(--color-accent);
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-card);
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .option:hover {
+    border-color: var(--color-accent);
+  }
+  .option-mark {
+    display: inline-block;
+    height: 0.9rem;
+    width: 0.9rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    border: 1.5px solid var(--color-border);
+  }
+  .option-selected {
+    border-color: var(--color-accent);
+    background-color: color-mix(in oklab, var(--color-accent) 12%, var(--color-card));
+  }
+  .option-selected .option-mark {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid var(--color-accent);
+    padding: 0.1rem 0.6rem;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+  }
+}
