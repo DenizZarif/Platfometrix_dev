@@ -56,12 +56,85 @@ export function ResultCard({ result, rank }: { result: ShortlistResult; rank: nu
         )}
       </ul>
 
-      <button
-        onClick={() => setOpen(!open)}
-        className="mt-5 text-xs font-medium uppercase tracking-wider text-accent"
-      >
-        {open ? "Hide score breakdown" : "Show score breakdown"}
-      </button>
+      {costEstimate && (
+        <div className="mt-5 border-t border-border/60 pt-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-display text-lg font-semibold">
+              {isFree ? "Free" : `${money(costEstimate.monthlyLow)}–${money(costEstimate.monthlyHigh)}/mo`}
+            </span>
+            {costEstimate.freeTierNote && <span className="badge">{costEstimate.freeTierNote}</span>}
+          </div>
+          <div className="text-xs text-muted-foreground">estimated</div>
+          <div className="mt-1 text-xs text-muted-foreground">{costEstimate.assumptionNote}</div>
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-wrap gap-5">
+        <button
+          onClick={() => setOpen(!open)}
+          className="text-xs font-medium uppercase tracking-wider text-accent"
+        >
+          {open ? "Hide score breakdown" : "Show score breakdown"}
+        </button>
+        {costEstimate && (
+          <button
+            onClick={() => setCostOpen(!costOpen)}
+            className="text-xs font-medium uppercase tracking-wider text-accent"
+          >
+            {costOpen ? "Hide cost breakdown" : "Show cost breakdown"}
+          </button>
+        )}
+      </div>
+
+      {costOpen && costEstimate && (
+        <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
+          <div>
+            <dt className="text-muted-foreground">Pricing model</dt>
+            <dd>{costEstimate.pricingModelLabel}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Cost tier</dt>
+            <dd>{costEstimate.costTierLabel}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Estimated monthly</dt>
+            <dd>
+              {isFree ? "Free" : `${money(costEstimate.monthlyLow)}–${money(costEstimate.monthlyHigh)}`}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Estimated annual</dt>
+            <dd>
+              {isFree
+                ? "Free"
+                : `${money(costEstimate.monthlyLow * 12)}–${money(costEstimate.monthlyHigh * 12)}`}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Implementation effort</dt>
+            <dd className="capitalize">{costEstimate.implementationCostTier}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Time to value</dt>
+            <dd className="capitalize">{costEstimate.timeToValue}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">Hidden costs</dt>
+            <dd>
+              {costEstimate.hiddenCosts.length ? (
+                <ul className="mt-1 list-disc space-y-1 pl-4">
+                  {costEstimate.hiddenCosts.map((h) => (
+                    <li key={h}>{h}</li>
+                  ))}
+                </ul>
+              ) : (
+                "No notable hidden costs reported"
+              )}
+            </dd>
+          </div>
+        </dl>
+      )}
+
 
       {open && (
         <div className="mt-4 overflow-x-auto">
