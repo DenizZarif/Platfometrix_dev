@@ -8,8 +8,8 @@ function shared(id: string): Question {
 
 export const CRM_QUESTIONS: Question[] = [
   shared("company_size"),
-  shared("budget_range"),
-  shared("technical_maturity"),
+  { ...shared("budget_range"), label: "What's your monthly software budget?" },
+  { ...shared("technical_maturity"), label: "Who manages your CRM today?" },
   {
     id: "email_calling_need",
     label: "Do you need built-in email sync and calling?",
