@@ -17,6 +17,13 @@ export interface Profile {
   technical_maturity: string | null;
   compliance_needs: string[] | null;
   customization_preference: string | null;
+  company_name: string | null;
+  job_title: string | null;
+  industry: string | null;
+  company_website: string | null;
+  growth_stage: string | null;
+  existing_stack: string | null;
+  digital_assets: string | null;
 }
 
 export interface SavedResultRow {
