@@ -99,7 +99,7 @@ function Quiz({
   onBack: () => void;
   onNext: () => void;
 }) {
-  const questions = STEPS[step];
+  const questions = STEPS[step] ?? [];
   const answered = questions.every((q) => {
     const v = answers[q.id];
     return Array.isArray(v) ? v.length > 0 : !!v;

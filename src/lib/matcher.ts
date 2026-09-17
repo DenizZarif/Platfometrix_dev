@@ -127,9 +127,9 @@ export function matchTools(answers: Answers): MatchResult[] {
   if (useEmbed) active.push("embed_fit");
   if (useSecuritySoft) active.push("security_soft_fit");
 
-  const total = active.reduce((s, k) => s + BASE_WEIGHTS[k], 0);
+  const total = active.reduce((s, k) => s + (BASE_WEIGHTS[k] ?? 0), 0);
   const weights: Record<string, number> = {};
-  active.forEach((k) => (weights[k] = BASE_WEIGHTS[k] / total));
+  active.forEach((k) => (weights[k] = (BASE_WEIGHTS[k] ?? 0) / total));
 
   const results: MatchResult[] = pool.map((tool) => {
     const criteria: CriterionResult[] = [];
@@ -144,8 +144,8 @@ export function matchTools(answers: Answers): MatchResult[] {
         key: "budget_fit",
         label: "Budget",
         answer: budget!,
-        toolValue: `${COST_LABEL[tool.tco_tier]} (tier ${tool.tco_tier}/5)`,
-        weight: weights["budget_fit"],
+        toolValue: `${COST_LABEL[tool.tco_tier] ?? ""} (tier ${tool.tco_tier}/5)`,
+        weight: (weights["budget_fit"] ?? 0),
         score,
         positive: "Sits comfortably inside your budget range",
         caveat: "Likely to cost more than your stated budget",
@@ -156,19 +156,19 @@ export function matchTools(answers: Answers): MatchResult[] {
       key: "report_builder_fit",
       label: "Report building",
       answer: builderPref,
-      toolValue: BUILDER_LABEL[tool.report_builder],
-      weight: weights["report_builder_fit"],
+      toolValue: BUILDER_LABEL[tool.report_builder] ?? "",
+      weight: (weights["report_builder_fit"] ?? 0),
       score: BUILDER_MAP[builderPref]?.[tool.report_builder] ?? 0.5,
-      positive: `${BUILDER_LABEL[tool.report_builder]} matches how your team wants to work`,
-      caveat: `Report building is ${BUILDER_LABEL[tool.report_builder].toLowerCase()}, which isn't how you prefer to work`,
+      positive: `${BUILDER_LABEL[tool.report_builder] ?? ""} matches how your team wants to work`,
+      caveat: `Report building is ${x}, which isn't how you prefer to work`,
     });
 
     push({
       key: "ux_complexity_fit",
       label: "Learning curve",
       answer: maturity,
-      toolValue: UX_LABEL[tool.ux_complexity],
-      weight: weights["ux_complexity_fit"],
+      toolValue: UX_LABEL[tool.ux_complexity] ?? "",
+      weight: (weights["ux_complexity_fit"] ?? 0),
       score: UX_MAP[maturity]?.[tool.ux_complexity] ?? 0.5,
       positive: "Learning curve suits the skills on your team today",
       caveat: "May be demanding for the data skills you have in-house",
@@ -180,7 +180,7 @@ export function matchTools(answers: Answers): MatchResult[] {
         label: "Embedding",
         answer: "Need to embed dashboards",
         toolValue: tool.embed_capability ? "Supports embedding" : "No embedding",
-        weight: weights["embed_fit"],
+        weight: (weights["embed_fit"] ?? 0),
         score: tool.embed_capability ? 1 : 0,
         positive: "Supports embedding dashboards in your own product",
         caveat: "Doesn't support embedding into your own product",
@@ -191,8 +191,8 @@ export function matchTools(answers: Answers): MatchResult[] {
       key: "connector_richness_fit",
       label: "Connectors",
       answer: "Connector coverage",
-      toolValue: TIER_LABEL[tool.connector_tier],
-      weight: weights["connector_richness_fit"],
+      toolValue: TIER_LABEL[tool.connector_tier] ?? "",
+      weight: (weights["connector_richness_fit"] ?? 0),
       score: tool.connector_tier === "high" ? 1 : tool.connector_tier === "medium" ? 0.6 : 0.3,
       positive: "Wide library of ready-made connectors",
       caveat: "Connector coverage is thinner than the leaders here",
@@ -203,8 +203,8 @@ export function matchTools(answers: Answers): MatchResult[] {
       key: "data_source_fit",
       label: "Data sources",
       answer: source ?? "Not specified",
-      toolValue: BREADTH_LABEL[tool.data_source_breadth],
-      weight: weights["data_source_fit"],
+      toolValue: BREADTH_LABEL[tool.data_source_breadth] ?? "",
+      weight: (weights["data_source_fit"] ?? 0),
       score: multi
         ? tool.data_source_breadth === "broad" ? 1 : tool.data_source_breadth === "medium" ? 0.5 : 0.1
         : tool.data_source_breadth === "broad" ? 1 : tool.data_source_breadth === "medium" ? 0.8 : 0.6,
@@ -216,8 +216,8 @@ export function matchTools(answers: Answers): MatchResult[] {
       key: "customization_fit",
       label: "Customization",
       answer: customPref,
-      toolValue: CUSTOM_LABEL[tool.customization_level],
-      weight: weights["customization_fit"],
+      toolValue: CUSTOM_LABEL[tool.customization_level] ?? "",
+      weight: (weights["customization_fit"] ?? 0),
       score: CUSTOM_MAP[customPref]?.[tool.customization_level] ?? 0.5,
       positive: "Set-up effort matches what you're willing to invest",
       caveat: "Set-up style doesn't match how hands-on you want to be",
@@ -229,7 +229,7 @@ export function matchTools(answers: Answers): MatchResult[] {
         label: "Security certifications",
         answer: "No hard compliance requirement",
         toolValue: tool.security_certs.length ? tool.security_certs.join(", ") : "None published",
-        weight: weights["security_soft_fit"],
+        weight: (weights["security_soft_fit"] ?? 0),
         score: Math.min(1, tool.security_certs.length / 3),
         positive: "Strong set of published security certifications",
         caveat: "Few published security certifications",
