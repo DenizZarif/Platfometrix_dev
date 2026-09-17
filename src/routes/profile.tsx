@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { QUESTIONS } from "@/lib/questions";
 import { cn } from "@/lib/utils";
 import { ResultCard } from "@/components/ResultCard";
 import { AuthModal } from "@/components/AuthModal";
+import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import {
   fetchProfile,
   listSavedResults,
@@ -66,13 +66,12 @@ function ProfilePage() {
   }, [user]);
 
   if (loading) {
-    return <main className="min-h-screen bg-background" />;
+    return <AppShell>{null}</AppShell>;
   }
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-background text-foreground">
-        <Header />
+      <AppShell>
         <section className="mx-auto max-w-2xl px-6 py-24 text-center">
           <h1 className="font-display text-3xl font-bold">Log in to see your profile</h1>
           <p className="mt-3 text-muted-foreground">
@@ -80,7 +79,7 @@ function ProfilePage() {
           </p>
         </section>
         <AuthModal open onClose={() => {}} />
-      </main>
+      </AppShell>
     );
   }
 
