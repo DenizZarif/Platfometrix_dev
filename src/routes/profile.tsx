@@ -136,6 +136,12 @@ function ProfilePage() {
 
       <section className="mx-auto max-w-3xl px-6 pb-24">
         <h1 className="font-display text-4xl font-bold tracking-tight">My profile</h1>
+
+        <CompanyDetails userId={user.id} profile={profile} />
+
+        <h2 className="font-display mt-20 text-2xl font-bold tracking-tight">
+          Matching preferences
+        </h2>
         <p className="mt-3 text-muted-foreground">
           These answers are reused whenever you start a new match, in any category.
         </p>
@@ -220,6 +226,199 @@ function ProfilePage() {
         )}
       </section>
     </main>
+  );
+}
+
+const INDUSTRY_OPTIONS = [
+  "Technology / SaaS",
+  "Financial Services",
+  "Healthcare",
+  "Retail / E-commerce",
+  "Manufacturing",
+  "Professional Services",
+  "Education",
+  "Nonprofit / Government",
+  "Other",
+];
+
+const GROWTH_OPTIONS = [
+  "Early stage",
+  "Steady growth",
+  "Fast-growing",
+  "Event-driven / seasonal",
+  "Not sure",
+];
+
+const inputClass =
+  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent";
+
+interface CompanyFields {
+  company_name: string;
+  job_title: string;
+  company_website: string;
+  industry: string;
+  growth_stage: string;
+  existing_stack: string;
+  digital_assets: string;
+}
+
+const EMPTY_COMPANY: CompanyFields = {
+  company_name: "",
+  job_title: "",
+  company_website: "",
+  industry: "",
+  growth_stage: "",
+  existing_stack: "",
+  digital_assets: "",
+};
+
+function CompanyDetails({ userId, profile }: { userId: string; profile: Profile | null }) {
+  const [fields, setFields] = useState<CompanyFields>(EMPTY_COMPANY);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  useEffect(() => {
+    if (!profile) return;
+    setFields({
+      company_name: profile.company_name ?? "",
+      job_title: profile.job_title ?? "",
+      company_website: profile.company_website ?? "",
+      industry: profile.industry ?? "",
+      growth_stage: profile.growth_stage ?? "",
+      existing_stack: profile.existing_stack ?? "",
+      digital_assets: profile.digital_assets ?? "",
+    });
+  }, [profile]);
+
+  const set = (key: keyof CompanyFields, v: string) => {
+    setFields((f) => ({ ...f, [key]: v }));
+    setStatus("idle");
+  };
+
+  const save = async () => {
+    setStatus("saving");
+    try {
+      await upsertProfile(userId, {
+        company_name: fields.company_name || null,
+        job_title: fields.job_title || null,
+        company_website: fields.company_website || null,
+        industry: fields.industry || null,
+        growth_stage: fields.growth_stage || null,
+        existing_stack: fields.existing_stack || null,
+        digital_assets: fields.digital_assets || null,
+      });
+      setStatus("saved");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <section className="mt-10">
+      <h2 className="font-display text-2xl font-bold tracking-tight">Company details</h2>
+      <p className="mt-2 text-muted-foreground">
+        Optional — helps us understand your context, doesn't affect your matches.
+      </p>
+
+      <div className="mt-6 grid gap-5">
+        <label className="block">
+          <span className="text-sm font-medium">Company name</span>
+          <input
+            className={cn(inputClass, "mt-2")}
+            value={fields.company_name}
+            onChange={(e) => set("company_name", e.target.value)}
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium">Your role</span>
+          <input
+            className={cn(inputClass, "mt-2")}
+            value={fields.job_title}
+            onChange={(e) => set("job_title", e.target.value)}
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium">Company website</span>
+          <input
+            className={cn(inputClass, "mt-2")}
+            placeholder="https://"
+            value={fields.company_website}
+            onChange={(e) => set("company_website", e.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="font-display text-xl font-semibold">Industry</h3>
+        <div className="mt-4 grid gap-2">
+          {INDUSTRY_OPTIONS.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => set("industry", fields.industry === opt ? "" : opt)}
+              className={cn("option", fields.industry === opt && "option-selected")}
+            >
+              <span className="option-mark" />
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="font-display text-xl font-semibold">Growth stage</h3>
+        <div className="mt-4 grid gap-2">
+          {GROWTH_OPTIONS.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => set("growth_stage", fields.growth_stage === opt ? "" : opt)}
+              className={cn("option", fields.growth_stage === opt && "option-selected")}
+            >
+              <span className="option-mark" />
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-5">
+        <label className="block">
+          <span className="text-sm font-medium">Tools you already use (optional)</span>
+          <textarea
+            rows={3}
+            className={cn(inputClass, "mt-2 resize-y")}
+            placeholder="e.g. Salesforce, Snowflake, Slack — comma separated"
+            value={fields.existing_stack}
+            onChange={(e) => set("existing_stack", e.target.value)}
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium">Other systems or data you run (optional)</span>
+          <textarea
+            rows={3}
+            className={cn(inputClass, "mt-2 resize-y")}
+            placeholder="e.g. internal app, customer database, website analytics"
+            value={fields.digital_assets}
+            onChange={(e) => set("digital_assets", e.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="mt-6 flex items-center gap-4">
+        <button
+          onClick={() => void save()}
+          disabled={status === "saving"}
+          className="btn-accent disabled:opacity-40"
+        >
+          {status === "saving" ? "Saving…" : "Save company details"}
+        </button>
+        {status === "saved" && <span className="text-sm text-accent">Company details saved</span>}
+        {status === "error" && (
+          <span className="text-sm text-destructive">Couldn't save — please try again.</span>
+        )}
+      </div>
+    </section>
   );
 }
 

@@ -17,6 +17,13 @@ export interface Profile {
   technical_maturity: string | null;
   compliance_needs: string[] | null;
   customization_preference: string | null;
+  company_name: string | null;
+  job_title: string | null;
+  industry: string | null;
+  company_website: string | null;
+  growth_stage: string | null;
+  existing_stack: string | null;
+  digital_assets: string | null;
 }
 
 export interface SavedResultRow {
@@ -30,7 +37,9 @@ export interface SavedResultRow {
 export async function fetchProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, company_size, budget_range, technical_maturity, compliance_needs, customization_preference")
+    .select(
+      "id, company_size, budget_range, technical_maturity, compliance_needs, customization_preference, company_name, job_title, industry, company_website, growth_stage, existing_stack, digital_assets",
+    )
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
