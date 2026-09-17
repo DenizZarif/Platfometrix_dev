@@ -130,7 +130,7 @@ function Index() {
 
   const results = useMemo<ShortlistResult[]>(() => {
     if (screen !== "results" || !category) return [];
-    return category === "bi" ? matchTools(answers) : matchCrmTools(answers);
+    return MATCHERS[category](answers);
   }, [screen, answers, category]);
 
   const doSave = useCallback(async () => {
@@ -261,7 +261,7 @@ function CategoryPicker({ onPick }: { onPick: (c: Category) => void }) {
         explained shortlist.
       </p>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2">
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(Object.keys(CATEGORY_CONFIG) as Category[]).map((c) => {
           const cfg = CATEGORY_CONFIG[c];
           return (
