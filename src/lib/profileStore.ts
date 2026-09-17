@@ -28,7 +28,7 @@ export interface Profile {
 
 export interface SavedResultRow {
   id: string;
-  category: "bi" | "crm";
+  category: "bi" | "crm" | "warehouse";
   answers: Answers;
   results: ShortlistResult[];
   created_at: string;
@@ -83,7 +83,7 @@ export function answersFromProfile(profile: Profile | null): Answers {
 
 export async function saveResult(
   userId: string,
-  category: "bi" | "crm",
+  category: "bi" | "crm" | "warehouse",
   answers: Answers,
   results: ShortlistResult[],
 ) {
