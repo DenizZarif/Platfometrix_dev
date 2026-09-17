@@ -1,5 +1,6 @@
 import { BI_TOOLS, type BiTool } from "@/data/biTools";
 import type { Answers } from "./questions";
+import { estimateBiCost, type CostEstimate } from "./costEstimate";
 
 export interface CriterionResult {
   key: string;
@@ -19,6 +20,7 @@ export interface MatchResult {
   criteria: CriterionResult[];
   fits: string[];
   caveat: string | null;
+  costEstimate: CostEstimate;
 }
 
 const CERT_MAP: Record<string, string> = {
@@ -246,6 +248,7 @@ export function matchTools(answers: Answers): MatchResult[] {
       criteria,
       fits: byContribution.slice(0, 2).map((c) => c.positive),
       caveat: lowest && lowest.score < 1 ? lowest.caveat : null,
+      costEstimate: estimateBiCost(tool, answers["company_size"] as string | undefined),
     };
   });
 
