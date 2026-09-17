@@ -1,45 +1,113 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { STEPS, QUESTIONS, type Answers } from "@/lib/questions";
-import { matchTools, type MatchResult } from "@/lib/matcher";
+import { STEPS, QUESTIONS, type Answers, type Question } from "@/lib/questions";
+import { CRM_STEPS, CRM_QUESTIONS } from "@/lib/questionsCrm";
+import { matchTools, type CriterionResult } from "@/lib/matcher";
+import { matchCrmTools } from "@/lib/matcherCrm";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Platfometrix — Find the BI Tool That Fits Your Team" },
+      { title: "Platfometrix — Find the BI or CRM Tool That Fits Your Team" },
       {
         name: "description",
         content:
-          "Answer 11 questions about budget, team and data setup and get a ranked, explained shortlist of BI and reporting tools.",
+          "Answer a few questions about budget, team and setup and get a ranked, explained shortlist of BI/reporting or CRM tools.",
       },
-      { property: "og:title", content: "Platfometrix — BI Tool Matcher" },
+      { property: "og:title", content: "Platfometrix — BI & CRM Tool Matcher" },
       {
         property: "og:description",
         content:
-          "A personalized, transparent BI tool shortlist based on your budget, team skills and data stack.",
+          "A personalized, transparent BI and CRM tool shortlist based on your budget, team skills and the way you work.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
 });
 
-type Screen = "landing" | "quiz" | "results";
+type Screen = "category" | "landing" | "quiz" | "results";
+type Category = "bi" | "crm";
+
+interface ShortlistTool {
+  id: string;
+  name: string;
+  free_tier: boolean;
+}
+
+interface ShortlistResult {
+  tool: ShortlistTool;
+  finalScore: number;
+  criteria: CriterionResult[];
+  fits: string[];
+  caveat: string | null;
+}
+
+const CATEGORY_CONFIG: Record<
+  Category,
+  {
+    label: string;
+    tagline: string;
+    steps: Question[][];
+    questions: Question[];
+    toolCount: number;
+    headline: React.ReactNode;
+    blurb: string;
+    headerNote: string;
+  }
+> = {
+  bi: {
+    label: "BI & Reporting",
+    tagline: "Dashboards, analytics and reporting for your data.",
+    steps: STEPS,
+    questions: QUESTIONS,
+    toolCount: 15,
+    headline: (
+      <>
+        Find the BI tool that <span className="text-accent">actually fits</span> your team
+      </>
+    ),
+    blurb:
+      "This isn't another \"best BI tools\" list — it's a personalized match scored against your budget, your team's skills and the way your data is actually set up.",
+    headerNote: "BI / reporting tool matcher",
+  },
+  crm: {
+    label: "CRM",
+    tagline: "Pipeline, contacts and sales workflow for your team.",
+    steps: CRM_STEPS,
+    questions: CRM_QUESTIONS,
+    toolCount: 15,
+    headline: (
+      <>
+        Find the CRM that <span className="text-accent">actually fits</span> your team
+      </>
+    ),
+    blurb:
+      "This isn't another \"best CRM\" list — it's a personalized match scored against your budget, how your team sells and how much set-up you're willing to do.",
+    headerNote: "CRM tool matcher",
+  },
+};
 
 function Index() {
-  const [screen, setScreen] = useState<Screen>("landing");
+  const [screen, setScreen] = useState<Screen>("category");
+  const [category, setCategory] = useState<Category | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
 
-  const results = useMemo(
-    () => (screen === "results" ? matchTools(answers) : []),
-    [screen, answers],
-  );
+  const config = category ? CATEGORY_CONFIG[category] : null;
+
+  const results = useMemo<ShortlistResult[]>(() => {
+    if (screen !== "results" || !category) return [];
+    return category === "bi" ? matchTools(answers) : matchCrmTools(answers);
+  }, [screen, answers, category]);
 
   const restart = () => {
     setAnswers({});
     setStep(0);
-    setScreen("landing");
+    setCategory(null);
+    setScreen("category");
   };
 
   return (
@@ -48,18 +116,34 @@ function Index() {
         <button onClick={restart} className="font-display text-sm font-bold tracking-[0.2em] uppercase text-accent">
           Platfometrix
         </button>
-        <span className="text-xs text-muted-foreground">BI / reporting tool matcher</span>
+        <span className="text-xs text-muted-foreground">
+          {config ? config.headerNote : "Software tool matcher"}
+        </span>
       </header>
 
-      {screen === "landing" && <Landing onStart={() => setScreen("quiz")} />}
-      {screen === "quiz" && (
+      {screen === "category" && (
+        <CategoryPicker
+          onPick={(c) => {
+            setCategory(c);
+            setAnswers({});
+            setStep(0);
+            setScreen("landing");
+          }}
+        />
+      )}
+      {screen === "landing" && config && (
+        <Landing config={config} onStart={() => setScreen("quiz")} />
+      )}
+      {screen === "quiz" && config && (
         <Quiz
+          steps={config.steps}
+          questions={config.questions}
           step={step}
           answers={answers}
           setAnswers={setAnswers}
           onBack={() => (step === 0 ? setScreen("landing") : setStep(step - 1))}
           onNext={() =>
-            step === STEPS.length - 1 ? setScreen("results") : setStep(step + 1)
+            step === config.steps.length - 1 ? setScreen("results") : setStep(step + 1)
           }
         />
       )}
@@ -68,17 +152,56 @@ function Index() {
   );
 }
 
-function Landing({ onStart }: { onStart: () => void }) {
+function CategoryPicker({ onPick }: { onPick: (c: Category) => void }) {
   return (
     <section className="mx-auto max-w-3xl px-6 pt-20 pb-28 text-center">
-      <p className="text-xs font-medium uppercase tracking-[0.25em] text-accent">15 tools · 11 questions · 2 minutes</p>
-      <h1 className="font-display mt-6 text-5xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
-        Find the BI tool that <span className="text-accent">actually fits</span> your team
+      <p className="text-xs font-medium uppercase tracking-[0.25em] text-accent">Pick a category</p>
+      <h1 className="font-display mt-6 text-4xl leading-[1.05] font-bold tracking-tight sm:text-5xl">
+        What are you <span className="text-accent">shopping for</span>?
       </h1>
       <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-        This isn't another "best BI tools" list — it's a personalized match scored against your
-        budget, your team's skills and the way your data is actually set up.
+        Each category is scored on its own set of questions — answer once and get a ranked,
+        explained shortlist.
       </p>
+
+      <div className="mt-12 grid gap-4 sm:grid-cols-2">
+        {(Object.keys(CATEGORY_CONFIG) as Category[]).map((c) => {
+          const cfg = CATEGORY_CONFIG[c];
+          return (
+            <button
+              key={c}
+              onClick={() => onPick(c)}
+              className="rounded-2xl border border-border bg-card p-8 text-left transition-colors hover:border-accent"
+            >
+              <h2 className="font-display text-2xl font-semibold">{cfg.label}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{cfg.tagline}</p>
+              <p className="mt-6 text-xs uppercase tracking-[0.2em] text-accent">
+                {cfg.toolCount} tools · {cfg.questions.length} questions
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function Landing({
+  config,
+  onStart,
+}: {
+  config: (typeof CATEGORY_CONFIG)[Category];
+  onStart: () => void;
+}) {
+  return (
+    <section className="mx-auto max-w-3xl px-6 pt-20 pb-28 text-center">
+      <p className="text-xs font-medium uppercase tracking-[0.25em] text-accent">
+        {config.toolCount} tools · {config.questions.length} questions · 2 minutes
+      </p>
+      <h1 className="font-display mt-6 text-5xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
+        {config.headline}
+      </h1>
+      <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">{config.blurb}</p>
       <button onClick={onStart} className="btn-accent mt-10">
         Find my match
       </button>
@@ -87,25 +210,29 @@ function Landing({ onStart }: { onStart: () => void }) {
 }
 
 function Quiz({
+  steps,
+  questions: allQuestions,
   step,
   answers,
   setAnswers,
   onBack,
   onNext,
 }: {
+  steps: Question[][];
+  questions: Question[];
   step: number;
   answers: Answers;
   setAnswers: (a: Answers) => void;
   onBack: () => void;
   onNext: () => void;
 }) {
-  const questions = STEPS[step] ?? [];
+  const questions = steps[step] ?? [];
   const answered = questions.every((q) => {
     const v = answers[q.id];
     return Array.isArray(v) ? v.length > 0 : !!v;
   });
-  const progress = ((step + 1) / STEPS.length) * 100;
-  const answeredCount = QUESTIONS.filter((q) => {
+  const progress = ((step + 1) / steps.length) * 100;
+  const answeredCount = allQuestions.filter((q) => {
     const v = answers[q.id];
     return Array.isArray(v) ? v.length > 0 : !!v;
   }).length;
@@ -134,8 +261,8 @@ function Quiz({
     <section className="mx-auto max-w-2xl px-6 pb-24">
       <div className="mb-10">
         <div className="mb-2 flex justify-between text-xs text-muted-foreground">
-          <span>Step {step + 1} of {STEPS.length}</span>
-          <span>{answeredCount}/{QUESTIONS.length} answered</span>
+          <span>Step {step + 1} of {steps.length}</span>
+          <span>{answeredCount}/{allQuestions.length} answered</span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
           <div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -174,14 +301,14 @@ function Quiz({
           Back
         </button>
         <button onClick={onNext} disabled={!answered} className="btn-accent disabled:cursor-not-allowed disabled:opacity-40">
-          {step === STEPS.length - 1 ? "See my matches" : "Continue"}
+          {step === steps.length - 1 ? "See my matches" : "Continue"}
         </button>
       </div>
     </section>
   );
 }
 
-function Results({ results, onRestart }: { results: MatchResult[]; onRestart: () => void }) {
+function Results({ results, onRestart }: { results: ShortlistResult[]; onRestart: () => void }) {
   return (
     <section className="mx-auto max-w-3xl px-6 pb-24">
       <h1 className="font-display text-4xl font-bold tracking-tight">Your shortlist</h1>
@@ -202,7 +329,7 @@ function Results({ results, onRestart }: { results: MatchResult[]; onRestart: ()
   );
 }
 
-function ResultCard({ result, rank }: { result: MatchResult; rank: number }) {
+function ResultCard({ result, rank }: { result: ShortlistResult; rank: number }) {
   const [open, setOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat } = result;
 
