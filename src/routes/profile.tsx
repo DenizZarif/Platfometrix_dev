@@ -130,10 +130,8 @@ function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Header />
-
-      <section className="mx-auto max-w-3xl px-6 pb-24">
+    <AppShell>
+      <section className="mx-auto max-w-3xl px-6 pt-16 pb-24">
         <h1 className="font-display text-4xl font-bold tracking-tight">My profile</h1>
 
         <CompanyDetails userId={user.id} profile={profile} />
