@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CriterionResult } from "@/lib/matcher";
+import type { CostEstimate } from "@/lib/costEstimate";
 
 export interface ShortlistTool {
   id: string;
@@ -13,11 +14,16 @@ export interface ShortlistResult {
   criteria: CriterionResult[];
   fits: string[];
   caveat: string | null;
+  costEstimate?: CostEstimate;
 }
+
+const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 export function ResultCard({ result, rank }: { result: ShortlistResult; rank: number }) {
   const [open, setOpen] = useState(false);
-  const { tool, finalScore, criteria, fits, caveat } = result;
+  const [costOpen, setCostOpen] = useState(false);
+  const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
+  const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
 
   return (
     <article className="rounded-2xl border border-border bg-card p-6">
