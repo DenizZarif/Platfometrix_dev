@@ -1,10 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { STEPS, QUESTIONS, type Answers, type Question } from "@/lib/questions";
 import { CRM_STEPS, CRM_QUESTIONS } from "@/lib/questionsCrm";
-import { matchTools, type CriterionResult } from "@/lib/matcher";
+import { matchTools } from "@/lib/matcher";
 import { matchCrmTools } from "@/lib/matcherCrm";
 import { cn } from "@/lib/utils";
+import { ResultCard, type ShortlistResult } from "@/components/ResultCard";
+import { AuthModal } from "@/components/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { answersFromProfile, fetchProfile, saveResult, type Profile } from "@/lib/profileStore";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,20 +35,6 @@ export const Route = createFileRoute("/")({
 
 type Screen = "category" | "landing" | "quiz" | "results";
 type Category = "bi" | "crm";
-
-interface ShortlistTool {
-  id: string;
-  name: string;
-  free_tier: boolean;
-}
-
-interface ShortlistResult {
-  tool: ShortlistTool;
-  finalScore: number;
-  criteria: CriterionResult[];
-  fits: string[];
-  caveat: string | null;
-}
 
 const CATEGORY_CONFIG: Record<
   Category,
@@ -96,6 +87,22 @@ function Index() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
 
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const pendingSave = useRef(false);
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+    fetchProfile(user.id)
+      .then(setProfile)
+      .catch(() => setProfile(null));
+  }, [user]);
+
   const config = category ? CATEGORY_CONFIG[category] : null;
 
   const results = useMemo<ShortlistResult[]>(() => {
@@ -103,34 +110,85 @@ function Index() {
     return category === "bi" ? matchTools(answers) : matchCrmTools(answers);
   }, [screen, answers, category]);
 
+  const doSave = useCallback(async () => {
+    if (!user || !category) return;
+    setSaveState("saving");
+    try {
+      await saveResult(user.id, category, answers, results);
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  }, [user, category, answers, results]);
+
+  useEffect(() => {
+    if (user && pendingSave.current && results.length > 0) {
+      pendingSave.current = false;
+      void doSave();
+    }
+  }, [user, results, doSave]);
+
+  const onSaveClick = () => {
+    if (!user) {
+      pendingSave.current = true;
+      setAuthOpen(true);
+      return;
+    }
+    void doSave();
+  };
+
   const restart = () => {
     setAnswers({});
     setStep(0);
     setCategory(null);
+    setSaveState("idle");
     setScreen("category");
+  };
+
+  const pickCategory = (c: Category) => {
+    setCategory(c);
+    setAnswers(answersFromProfile(profile));
+    setStep(0);
+    setSaveState("idle");
+    setScreen("landing");
   };
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <button onClick={restart} className="font-display text-sm font-bold tracking-[0.2em] uppercase text-accent">
+        <button
+          onClick={restart}
+          className="font-display text-sm font-bold tracking-[0.2em] uppercase text-accent"
+        >
           Platfometrix
         </button>
-        <span className="text-xs text-muted-foreground">
-          {config ? config.headerNote : "Software tool matcher"}
-        </span>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="hidden sm:inline">
+            {config ? config.headerNote : "Software tool matcher"}
+          </span>
+          {user ? (
+            <>
+              <Link to="/profile" className="text-accent">
+                My Profile
+              </Link>
+              <button
+                onClick={() => {
+                  void supabase.auth.signOut();
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setAuthOpen(true)} className="text-accent">
+              Log in
+            </button>
+          )}
+        </div>
       </header>
 
-      {screen === "category" && (
-        <CategoryPicker
-          onPick={(c) => {
-            setCategory(c);
-            setAnswers({});
-            setStep(0);
-            setScreen("landing");
-          }}
-        />
-      )}
+      {screen === "category" && <CategoryPicker onPick={pickCategory} />}
       {screen === "landing" && config && (
         <Landing config={config} onStart={() => setScreen("quiz")} />
       )}
@@ -147,7 +205,23 @@ function Index() {
           }
         />
       )}
-      {screen === "results" && <Results results={results} onRestart={restart} />}
+      {screen === "results" && (
+        <Results
+          results={results}
+          onRestart={restart}
+          onSave={onSaveClick}
+          saveState={saveState}
+        />
+      )}
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => {
+          setAuthOpen(false);
+          pendingSave.current = false;
+        }}
+        onAuthed={() => setAuthOpen(false)}
+      />
     </main>
   );
 }
@@ -308,7 +382,17 @@ function Quiz({
   );
 }
 
-function Results({ results, onRestart }: { results: ShortlistResult[]; onRestart: () => void }) {
+function Results({
+  results,
+  onRestart,
+  onSave,
+  saveState,
+}: {
+  results: ShortlistResult[];
+  onRestart: () => void;
+  onSave: () => void;
+  saveState: "idle" | "saving" | "saved" | "error";
+}) {
   return (
     <section className="mx-auto max-w-3xl px-6 pb-24">
       <h1 className="font-display text-4xl font-bold tracking-tight">Your shortlist</h1>
@@ -322,78 +406,20 @@ function Results({ results, onRestart }: { results: ShortlistResult[]; onRestart
         ))}
       </div>
 
-      <button onClick={onRestart} className="btn-ghost mt-10">
-        Start over
-      </button>
-    </section>
-  );
-}
-
-function ResultCard({ result, rank }: { result: ShortlistResult; rank: number }) {
-  const [open, setOpen] = useState(false);
-  const { tool, finalScore, criteria, fits, caveat } = result;
-
-  return (
-    <article className="rounded-2xl border border-border bg-card p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-muted-foreground">#{rank}</span>
-            <h2 className="font-display text-xl font-semibold">{tool.name}</h2>
-            {tool.free_tier && <span className="badge">Free tier</span>}
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="font-display text-3xl font-bold text-accent">{finalScore}</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">match</div>
-        </div>
-      </div>
-
-      <ul className="mt-5 space-y-2 text-sm">
-        {fits.map((f) => (
-          <li key={f} className="flex gap-2">
-            <span className="text-accent">+</span>
-            <span>{f}</span>
-          </li>
-        ))}
-        {caveat && (
-          <li className="flex gap-2 text-muted-foreground">
-            <span>!</span>
-            <span>{caveat}</span>
-          </li>
+      <div className="mt-10 flex flex-wrap items-center gap-4">
+        <button onClick={onRestart} className="btn-ghost">
+          Start over
+        </button>
+        <button onClick={onSave} disabled={saveState === "saving"} className="btn-accent disabled:opacity-40">
+          {saveState === "saving" ? "Saving…" : "Save this result"}
+        </button>
+        {saveState === "saved" && (
+          <span className="text-sm text-accent">Saved to your profile</span>
         )}
-      </ul>
-
-      <button onClick={() => setOpen(!open)} className="mt-5 text-xs font-medium uppercase tracking-wider text-accent">
-        {open ? "Hide score breakdown" : "Show score breakdown"}
-      </button>
-
-      {open && (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-2 pr-3 font-medium">Criterion</th>
-                <th className="py-2 pr-3 font-medium">Your answer</th>
-                <th className="py-2 pr-3 font-medium">{tool.name}</th>
-                <th className="py-2 pr-3 font-medium">Weight</th>
-                <th className="py-2 font-medium">Contribution</th>
-              </tr>
-            </thead>
-            <tbody>
-              {criteria.map((c) => (
-                <tr key={c.key} className="border-b border-border/50 align-top">
-                  <td className="py-2 pr-3 font-medium">{c.label}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">{c.answer}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">{c.toolValue}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">{Math.round(c.weight * 100)}%</td>
-                  <td className="py-2">{Math.round(c.contribution * 100)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </article>
+        {saveState === "error" && (
+          <span className="text-sm text-destructive">Couldn't save — please try again.</span>
+        )}
+      </div>
+    </section>
   );
 }
