@@ -35,7 +35,7 @@ function Dashboard() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      const isGuest = typeof window !== "undefined" && localStorage.getItem("platfometrix_guest") === "1";
+      const isGuest = typeof window !== "undefined" && sessionStorage.getItem("platfometrix_guest") === "1";
       if (!isGuest) {
         void navigate({ to: "/welcome" });
         return;
@@ -54,7 +54,7 @@ function Dashboard() {
   }, [user]);
 
   if (loading) return null;
-  const isGuest = typeof window !== "undefined" && localStorage.getItem("platfometrix_guest") === "1";
+  const isGuest = typeof window !== "undefined" && sessionStorage.getItem("platfometrix_guest") === "1";
   if (!user && !isGuest) return null;
 
   return (
