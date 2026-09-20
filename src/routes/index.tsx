@@ -53,6 +53,10 @@ function Dashboard() {
       .catch(() => setRows([]));
   }, [user]);
 
+  if (loading) return null;
+  const isGuest = typeof window !== "undefined" && localStorage.getItem("platfometrix_guest") === "1";
+  if (!user && !isGuest) return null;
+
   return (
     <AppShell>
       <section className="mx-auto max-w-4xl px-6 pt-16 pb-24">
