@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,8 +28,20 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<SavedResultRow[]>([]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      const isGuest = typeof window !== "undefined" && localStorage.getItem("platfometrix_guest") === "1";
+      if (!isGuest) {
+        void navigate({ to: "/welcome" });
+        return;
+      }
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) {
@@ -40,6 +52,10 @@ function Dashboard() {
       .then((r) => setRows(r.slice(0, 3)))
       .catch(() => setRows([]));
   }, [user]);
+
+  if (loading) return null;
+  const isGuest = typeof window !== "undefined" && localStorage.getItem("platfometrix_guest") === "1";
+  if (!user && !isGuest) return null;
 
   return (
     <AppShell>
