@@ -47,6 +47,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           <button
             onClick={() => {
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("platfometrix_guest");
+              }
               void supabase.auth.signOut();
               setOpen(false);
             }}
