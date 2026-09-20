@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             onClick={() => {
               if (typeof window !== "undefined") {
-                localStorage.removeItem("platfometrix_guest");
+                sessionStorage.removeItem("platfometrix_guest");
               }
               void supabase.auth.signOut();
               setOpen(false);

@@ -40,7 +40,7 @@ function WelcomePage() {
 
   const continueAsGuest = () => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("platfometrix_guest", "1");
+      sessionStorage.setItem("platfometrix_guest", "1");
     }
     void navigate({ to: "/" });
   };
