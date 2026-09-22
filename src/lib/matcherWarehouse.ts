@@ -124,7 +124,10 @@ function asArray(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : [v];
 }
 
-export function matchWarehouseTools(answers: Answers): WarehouseMatchResult[] {
+export function matchWarehouseTools(
+  answers: Answers,
+  weightOverrides?: Partial<Record<string, number>>,
+): WarehouseMatchResult[] {
   const compliance = asArray(answers["compliance_needs"]).filter(
     (c) => c !== "Not sure" && c !== "None required",
   );

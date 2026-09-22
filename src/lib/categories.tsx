@@ -74,7 +74,10 @@ export const CATEGORY_CONFIG: Record<
   },
 };
 
-export const MATCHERS: Record<Category, (a: Answers) => ShortlistResult[]> = {
+export const MATCHERS: Record<
+  Category,
+  (a: Answers, weightOverrides?: Partial<Record<string, number>>) => ShortlistResult[]
+> = {
   bi: matchTools,
   crm: matchCrmTools,
   warehouse: matchWarehouseTools,
