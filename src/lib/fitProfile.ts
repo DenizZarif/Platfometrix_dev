@@ -2,7 +2,7 @@ import type { BiTool } from "@/data/biTools";
 import type { CrmTool } from "@/data/crmTools";
 import type { WarehouseTool } from "@/data/warehouseTools";
 
-const BI_COST: Record<BiTool["tco_tier"], string> = {
+const BI_COST: Record<number, string> = {
   1: "Startups and budget-conscious teams",
   2: "Small-to-mid-size companies with modest BI budgets",
   3: "Growing mid-market companies",
@@ -28,7 +28,7 @@ const BI_CUSTOMIZATION: Record<BiTool["customization_level"], string> = {
   composable: "Organizations that want to build extensively on top of the platform",
 };
 
-const CRM_COST: Record<CrmTool["tco_tier"], string> = {
+const CRM_COST: Record<number, string> = {
   1: "Startups and very small teams",
   2: "Small businesses",
   3: "Growing small-to-mid-size sales teams",
@@ -84,7 +84,7 @@ function complianceBullet(certs: string[]): string {
 
 export function buildBiFitProfile(tool: BiTool): string[] {
   const bullets = [
-    BI_COST[tool.tco_tier],
+    BI_COST[tool.tco_tier] ?? "Teams with a flexible BI budget",
     BI_UX[tool.ux_complexity],
     BI_BREADTH[tool.data_source_breadth],
     BI_CUSTOMIZATION[tool.customization_level],
@@ -96,7 +96,7 @@ export function buildBiFitProfile(tool: BiTool): string[] {
 
 export function buildCrmFitProfile(tool: CrmTool): string[] {
   const bullets = [
-    CRM_COST[tool.tco_tier],
+    CRM_COST[tool.tco_tier] ?? "Sales teams with a flexible software budget",
     CRM_UX[tool.ux_complexity],
     CRM_MARKETING[tool.marketing_automation_tier],
     CRM_MOBILE[tool.mobile_app_quality],
