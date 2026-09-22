@@ -11,6 +11,11 @@ import {
   buildCrmImplementationPlan,
   buildWarehouseImplementationPlan,
 } from "@/lib/implementationPlan";
+import {
+  buildBiFitProfile,
+  buildCrmFitProfile,
+  buildWarehouseFitProfile,
+} from "@/lib/fitProfile";
 
 export interface ShortlistTool {
   id: string;
@@ -31,24 +36,51 @@ const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 type ResultCategory = "bi" | "crm" | "warehouse";
 
-function buildPlan(
+function resolveTool(
+  category: ResultCategory,
+  resultTool: ShortlistTool,
+) {
+  if (category === "bi") {
+    return BI_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as BiTool);
+  }
+  if (category === "crm") {
+    return CRM_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as CrmTool);
+  }
+  return (
+    WAREHOUSE_TOOLS.find((candidate) => candidate.id === resultTool.id) ??
+    (resultTool as WarehouseTool)
+  );
+}
+
+function buildDetails(
   category: ResultCategory,
   resultTool: ShortlistTool,
   answers: Answers,
   profile: Profile | null,
 ) {
+  const resolvedTool = resolveTool(category, resultTool);
   if (category === "bi") {
-    const tool = BI_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as BiTool);
-    return buildBiImplementationPlan(tool, answers, profile);
+    const tool = resolvedTool as BiTool;
+    return {
+      implementationPlan: buildBiImplementationPlan(tool, answers, profile),
+      fitProfile: buildBiFitProfile(tool),
+      marketAdoption: tool.market_adoption,
+    };
   }
   if (category === "crm") {
-    const tool = CRM_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as CrmTool);
-    return buildCrmImplementationPlan(tool, answers, profile);
+    const tool = resolvedTool as CrmTool;
+    return {
+      implementationPlan: buildCrmImplementationPlan(tool, answers, profile),
+      fitProfile: buildCrmFitProfile(tool),
+      marketAdoption: tool.market_adoption,
+    };
   }
-  const tool =
-    WAREHOUSE_TOOLS.find((candidate) => candidate.id === resultTool.id) ??
-    (resultTool as WarehouseTool);
-  return buildWarehouseImplementationPlan(tool, answers, profile);
+  const tool = resolvedTool as WarehouseTool;
+  return {
+    implementationPlan: buildWarehouseImplementationPlan(tool, answers, profile),
+    fitProfile: buildWarehouseFitProfile(tool),
+    marketAdoption: tool.market_adoption,
+  };
 }
 
 export function ResultCard({
@@ -67,9 +99,15 @@ export function ResultCard({
   const [open, setOpen] = useState(false);
   const [costOpen, setCostOpen] = useState(false);
   const [implementationOpen, setImplementationOpen] = useState(false);
+  const [fitOpen, setFitOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
   const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
-  const implementationPlan = buildPlan(category, tool, answers, profile);
+  const { implementationPlan, fitProfile, marketAdoption } = buildDetails(
+    category,
+    tool,
+    answers,
+    profile,
+  );
 
   return (
     <article className="rounded-2xl border border-border bg-card p-6">
@@ -135,6 +173,14 @@ export function ResultCard({
           className="text-xs font-medium uppercase tracking-wider text-accent"
         >
           {implementationOpen ? "Hide implementation plan" : "Show implementation plan"}
+        </button>
+        <button
+          onClick={() => setFitOpen(!fitOpen)}
+          className="text-xs font-medium uppercase tracking-wider text-accent"
+        >
+          {fitOpen
+            ? "Hide best-fit profile & popularity"
+            : "Show best-fit profile & popularity"}
         </button>
       </div>
 
@@ -225,6 +271,24 @@ export function ResultCard({
                 </li>
               ))}
             </ol>
+          </div>
+        </div>
+      )}
+
+      {fitOpen && (
+        <div className="mt-4 space-y-5 border-t border-border/60 pt-4 text-sm">
+          <div>
+            <h3 className="font-display font-semibold">Popularity</h3>
+            <span className="badge mt-2 inline-flex">{marketAdoption.tier}</span>
+            <p className="mt-2 text-xs text-muted-foreground">{marketAdoption.note}</p>
+          </div>
+          <div>
+            <h3 className="font-display font-semibold">Best fit for</h3>
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+              {fitProfile.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
           </div>
         </div>
       )}

@@ -8,6 +8,11 @@ import {
   buildCrmImplementationPlan,
   buildWarehouseImplementationPlan,
 } from "@/lib/implementationPlan";
+import {
+  buildBiFitProfile,
+  buildCrmFitProfile,
+  buildWarehouseFitProfile,
+} from "@/lib/fitProfile";
 import type { ShortlistResult, ShortlistTool } from "@/components/ResultCard";
 
 type ResultCategory = "bi" | "crm" | "warehouse";
@@ -33,6 +38,21 @@ function planFor(
   return buildWarehouseImplementationPlan(tool, answers, profile);
 }
 
+function detailsFor(category: ResultCategory, resultTool: ShortlistTool) {
+  if (category === "bi") {
+    const tool = BI_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as BiTool);
+    return { marketAdoption: tool.market_adoption, fitProfile: buildBiFitProfile(tool) };
+  }
+  if (category === "crm") {
+    const tool = CRM_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as CrmTool);
+    return { marketAdoption: tool.market_adoption, fitProfile: buildCrmFitProfile(tool) };
+  }
+  const tool =
+    WAREHOUSE_TOOLS.find((candidate) => candidate.id === resultTool.id) ??
+    (resultTool as WarehouseTool);
+  return { marketAdoption: tool.market_adoption, fitProfile: buildWarehouseFitProfile(tool) };
+}
+
 function costLabel(result: ShortlistResult) {
   const cost = result.costEstimate;
   if (!cost) return "—";
@@ -54,6 +74,7 @@ export function CompareView({
   onClose?: () => void;
 }) {
   const plans = results.map((r) => planFor(category, r.tool, answers, profile));
+  const details = results.map((result) => detailsFor(category, result.tool));
 
   // Union of criterion labels, in first-seen order.
   const rows: { key: string; label: string }[] = [];
@@ -111,6 +132,31 @@ export function CompareView({
               {results.map((r) => (
                 <td key={r.tool.id} className="py-2 pr-3 text-muted-foreground">
                   {costLabel(r)}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/50 align-top">
+              <td className="py-2 pr-3 font-medium">Popularity</td>
+              {details.map((detail, index) => (
+                <td key={results[index]?.tool.id} className="py-2 pr-3">
+                  <span className="block font-semibold text-foreground">
+                    {detail.marketAdoption.tier}
+                  </span>
+                  <span className="mt-1 block text-muted-foreground">
+                    {detail.marketAdoption.note}
+                  </span>
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-border/50 align-top">
+              <td className="py-2 pr-3 font-medium">Best fit for</td>
+              {details.map((detail, index) => (
+                <td key={results[index]?.tool.id} className="py-2 pr-3 text-muted-foreground">
+                  <ul className="list-disc space-y-1 pl-4">
+                    {detail.fitProfile.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
                 </td>
               ))}
             </tr>
