@@ -212,7 +212,14 @@ function ProfilePage() {
                   {open && (
                     <div className="mt-5 space-y-4">
                       {row.results.map((r, i) => (
-                        <ResultCard key={r.tool.id} result={r} rank={i + 1} />
+                        <ResultCard
+                          key={r.tool.id}
+                          result={r}
+                          rank={i + 1}
+                          category={row.category}
+                          answers={row.answers}
+                          profile={profile}
+                        />
                       ))}
                     </div>
                   )}
