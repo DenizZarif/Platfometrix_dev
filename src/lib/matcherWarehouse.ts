@@ -185,9 +185,10 @@ export function matchWarehouseTools(answers: Answers): WarehouseMatchResult[] {
   if (useRealTime) active.push("real_time_fit");
   if (useSecuritySoft) active.push("security_soft_fit");
 
-  const total = active.reduce((s, k) => s + (BASE_WEIGHTS[k] ?? 0), 0);
+  const rawWeight = (k: string) => weightOverrides?.[k] ?? BASE_WEIGHTS[k] ?? 0;
+  const total = active.reduce((s, k) => s + rawWeight(k), 0);
   const weights: Record<string, number> = {};
-  active.forEach((k) => (weights[k] = (BASE_WEIGHTS[k] ?? 0) / total));
+  active.forEach((k) => (weights[k] = rawWeight(k) / total));
 
   const buyerTier = ANSWER_SCALE_NUM[volume] ?? 2;
   const workloadKey = WORKLOAD_MAP[workload] ?? "bi_reporting";

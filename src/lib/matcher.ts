@@ -91,7 +91,10 @@ function asArray(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : [v];
 }
 
-export function matchTools(answers: Answers): MatchResult[] {
+export function matchTools(
+  answers: Answers,
+  weightOverrides?: Partial<Record<string, number>>,
+): MatchResult[] {
   const rls = answers["row_level_security_required"] as string | undefined;
   const compliance = asArray(answers["compliance_needs"]).filter(
     (c) => c !== "Not sure" && c !== "None required",
@@ -129,9 +132,10 @@ export function matchTools(answers: Answers): MatchResult[] {
   if (useEmbed) active.push("embed_fit");
   if (useSecuritySoft) active.push("security_soft_fit");
 
-  const total = active.reduce((s, k) => s + (BASE_WEIGHTS[k] ?? 0), 0);
+  const rawWeight = (k: string) => weightOverrides?.[k] ?? BASE_WEIGHTS[k] ?? 0;
+  const total = active.reduce((s, k) => s + rawWeight(k), 0);
   const weights: Record<string, number> = {};
-  active.forEach((k) => (weights[k] = (BASE_WEIGHTS[k] ?? 0) / total));
+  active.forEach((k) => (weights[k] = rawWeight(k) / total));
 
   const results: MatchResult[] = pool.map((tool) => {
     const criteria: CriterionResult[] = [];

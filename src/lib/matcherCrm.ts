@@ -78,7 +78,10 @@ function asArray(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : [v];
 }
 
-export function matchCrmTools(answers: Answers): CrmMatchResult[] {
+export function matchCrmTools(
+  answers: Answers,
+  weightOverrides?: Partial<Record<string, number>>,
+): CrmMatchResult[] {
   const compliance = asArray(answers["compliance_needs"]).filter(
     (c) => c !== "Not sure" && c !== "None required",
   );
@@ -122,9 +125,10 @@ export function matchCrmTools(answers: Answers): CrmMatchResult[] {
   if (useMarketing) active.push("marketing_automation_fit");
   if (useSecuritySoft) active.push("security_soft_fit");
 
-  const total = active.reduce((s, k) => s + (BASE_WEIGHTS[k] ?? 0), 0);
+  const rawWeight = (k: string) => weightOverrides?.[k] ?? BASE_WEIGHTS[k] ?? 0;
+  const total = active.reduce((s, k) => s + rawWeight(k), 0);
   const weights: Record<string, number> = {};
-  active.forEach((k) => (weights[k] = (BASE_WEIGHTS[k] ?? 0) / total));
+  active.forEach((k) => (weights[k] = rawWeight(k) / total));
 
   const fieldHeavy = mobileUsage.startsWith("Team is often in the field");
   const advancedReporting = reportingNeed.startsWith("Need advanced");
