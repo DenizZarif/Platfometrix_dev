@@ -149,9 +149,12 @@ function MatchPage() {
       {screen === "results" && (
         <Results
           results={results}
+          baseResults={baseResults}
           category={category}
           answers={answers}
           profile={profile}
+          weightOverrides={weightOverrides}
+          setWeightOverrides={setWeightOverrides}
           onRestart={restart}
           onSave={onSaveClick}
           saveState={saveState}
