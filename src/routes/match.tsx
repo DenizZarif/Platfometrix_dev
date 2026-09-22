@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type Answers, type Question } from "@/lib/questions";
 import { cn } from "@/lib/utils";
 import { ResultCard, type ShortlistResult } from "@/components/ResultCard";
+import { CompareView } from "@/components/CompareView";
 import { AuthModal } from "@/components/AuthModal";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -331,21 +332,59 @@ function Quiz({
 
 function Results({
   results,
+  baseResults,
   category,
   answers,
   profile,
+  weightOverrides,
+  setWeightOverrides,
   onRestart,
   onSave,
   saveState,
 }: {
   results: ShortlistResult[];
+  baseResults: ShortlistResult[];
   category: Category | null;
   answers: Answers;
   profile: Profile | null;
+  weightOverrides: Record<string, number>;
+  setWeightOverrides: (w: Record<string, number>) => void;
   onRestart: () => void;
   onSave: () => void;
   saveState: "idle" | "saving" | "saved" | "error";
 }) {
+  const [weightsOpen, setWeightsOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+
+  const activeCriteria = baseResults[0]?.criteria ?? [];
+  const currentWeights = results[0]?.criteria ?? [];
+
+  const sliderValue = (key: string) => {
+    if (weightOverrides[key] !== undefined) return weightOverrides[key];
+    const base = activeCriteria.find((c) => c.key === key);
+    return Math.round((base?.weight ?? 0) * 100);
+  };
+
+  const setSlider = (key: string, value: number) => {
+    const next: Record<string, number> = { ...weightOverrides };
+    // Seed every untouched criterion with its default so relative ratios stay meaningful.
+    activeCriteria.forEach((c) => {
+      if (next[c.key] === undefined) next[c.key] = Math.round(c.weight * 100);
+    });
+    next[key] = value;
+    setWeightOverrides(next);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((s) =>
+      s.includes(id) ? s.filter((x) => x !== id) : s.length >= 3 ? s : [...s, id],
+    );
+  };
+
+  const selectedResults = results.filter((r) => selected.includes(r.tool.id));
+  const atLimit = selected.length >= 3;
+
   return (
     <section className="mx-auto max-w-3xl px-6 pt-12 pb-24">
       <h1 className="font-display text-4xl font-bold tracking-tight">Your shortlist</h1>
@@ -353,19 +392,100 @@ function Results({
         Ranked against your answers. Open any card to see exactly how the score was built.
       </p>
 
+      <div className="mt-8 rounded-2xl border border-border bg-card p-6">
+        <button
+          onClick={() => setWeightsOpen(!weightsOpen)}
+          className="text-xs font-medium uppercase tracking-wider text-accent"
+        >
+          {weightsOpen ? "Hide what matters most" : "Adjust what matters most"}
+        </button>
+
+        {weightsOpen && (
+          <div className="mt-5 space-y-4">
+            {activeCriteria.map((c) => {
+              const live = currentWeights.find((x) => x.key === c.key);
+              return (
+                <div key={c.key}>
+                  <div className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-medium">{c.label}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {Math.round((live?.weight ?? 0) * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    aria-label={c.label}
+                    value={sliderValue(c.key)}
+                    onChange={(e) => setSlider(c.key, Number(e.target.value))}
+                    className="mt-2 w-full accent-[var(--accent)]"
+                  />
+                </div>
+              );
+            })}
+            <button onClick={() => setWeightOverrides({})} className="btn-ghost">
+              Reset to recommended
+            </button>
+          </div>
+        )}
+      </div>
+
+      {selected.length >= 2 && (
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <button onClick={() => setCompareOpen(!compareOpen)} className="btn-accent">
+            {compareOpen ? "Hide comparison" : `Compare selected (${selected.length})`}
+          </button>
+          <button onClick={() => setSelected([])} className="btn-ghost">
+            Clear selection
+          </button>
+        </div>
+      )}
+
+      {compareOpen && selectedResults.length >= 2 && category && (
+        <CompareView
+          results={selectedResults}
+          category={category}
+          answers={answers}
+          profile={profile}
+          onClose={() => setCompareOpen(false)}
+        />
+      )}
+
       <div className="mt-10 space-y-4">
-        {results.map((r, i) => (
-          category && (
-            <ResultCard
-              key={r.tool.id}
-              result={r}
-              rank={i + 1}
-              category={category}
-              answers={answers}
-              profile={profile}
-            />
-          )
-        ))}
+        {results.map((r, i) => {
+          if (!category) return null;
+          const isSelected = selected.includes(r.tool.id);
+          const disabled = !isSelected && atLimit;
+          return (
+            <div key={r.tool.id}>
+              <label
+                className={cn(
+                  "mb-2 flex items-center gap-2 text-xs",
+                  disabled ? "text-muted-foreground/60" : "text-muted-foreground",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  disabled={disabled}
+                  onChange={() => toggleSelect(r.tool.id)}
+                  className="accent-[var(--accent)]"
+                />
+                Compare {r.tool.name}
+                {disabled && <span>· pick at most 3 tools to compare</span>}
+              </label>
+              <ResultCard
+                result={r}
+                rank={i + 1}
+                category={category}
+                answers={answers}
+                profile={profile}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-10 flex flex-wrap items-center gap-4">
