@@ -138,7 +138,15 @@ function MatchPage() {
         />
       )}
       {screen === "results" && (
-        <Results results={results} onRestart={restart} onSave={onSaveClick} saveState={saveState} />
+        <Results
+          results={results}
+          category={category}
+          answers={answers}
+          profile={profile}
+          onRestart={restart}
+          onSave={onSaveClick}
+          saveState={saveState}
+        />
       )}
 
       <AuthModal
@@ -311,11 +319,17 @@ function Quiz({
 
 function Results({
   results,
+  category,
+  answers,
+  profile,
   onRestart,
   onSave,
   saveState,
 }: {
   results: ShortlistResult[];
+  category: Category | null;
+  answers: Answers;
+  profile: Profile | null;
   onRestart: () => void;
   onSave: () => void;
   saveState: "idle" | "saving" | "saved" | "error";
@@ -329,7 +343,16 @@ function Results({
 
       <div className="mt-10 space-y-4">
         {results.map((r, i) => (
-          <ResultCard key={r.tool.id} result={r} rank={i + 1} />
+          category && (
+            <ResultCard
+              key={r.tool.id}
+              result={r}
+              rank={i + 1}
+              category={category}
+              answers={answers}
+              profile={profile}
+            />
+          )
         ))}
       </div>
 

@@ -1,6 +1,16 @@
 import { useState } from "react";
+import { BI_TOOLS, type BiTool } from "@/data/biTools";
+import { CRM_TOOLS, type CrmTool } from "@/data/crmTools";
+import { WAREHOUSE_TOOLS, type WarehouseTool } from "@/data/warehouseTools";
 import type { CriterionResult } from "@/lib/matcher";
 import type { CostEstimate } from "@/lib/costEstimate";
+import type { Answers } from "@/lib/questions";
+import type { Profile } from "@/lib/profileStore";
+import {
+  buildBiImplementationPlan,
+  buildCrmImplementationPlan,
+  buildWarehouseImplementationPlan,
+} from "@/lib/implementationPlan";
 
 export interface ShortlistTool {
   id: string;
@@ -19,11 +29,47 @@ export interface ShortlistResult {
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
-export function ResultCard({ result, rank }: { result: ShortlistResult; rank: number }) {
+type ResultCategory = "bi" | "crm" | "warehouse";
+
+function buildPlan(
+  category: ResultCategory,
+  resultTool: ShortlistTool,
+  answers: Answers,
+  profile: Profile | null,
+) {
+  if (category === "bi") {
+    const tool = BI_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as BiTool);
+    return buildBiImplementationPlan(tool, answers, profile);
+  }
+  if (category === "crm") {
+    const tool = CRM_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as CrmTool);
+    return buildCrmImplementationPlan(tool, answers, profile);
+  }
+  const tool =
+    WAREHOUSE_TOOLS.find((candidate) => candidate.id === resultTool.id) ??
+    (resultTool as WarehouseTool);
+  return buildWarehouseImplementationPlan(tool, answers, profile);
+}
+
+export function ResultCard({
+  result,
+  rank,
+  category,
+  answers = {},
+  profile = null,
+}: {
+  result: ShortlistResult;
+  rank: number;
+  category: ResultCategory;
+  answers?: Answers;
+  profile?: Profile | null;
+}) {
   const [open, setOpen] = useState(false);
   const [costOpen, setCostOpen] = useState(false);
+  const [implementationOpen, setImplementationOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
   const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
+  const implementationPlan = buildPlan(category, tool, answers, profile);
 
   return (
     <article className="rounded-2xl border border-border bg-card p-6">
@@ -84,6 +130,12 @@ export function ResultCard({ result, rank }: { result: ShortlistResult; rank: nu
             {costOpen ? "Hide cost breakdown" : "Show cost breakdown"}
           </button>
         )}
+        <button
+          onClick={() => setImplementationOpen(!implementationOpen)}
+          className="text-xs font-medium uppercase tracking-wider text-accent"
+        >
+          {implementationOpen ? "Hide implementation plan" : "Show implementation plan"}
+        </button>
       </div>
 
       {costOpen && costEstimate && (
@@ -133,6 +185,48 @@ export function ResultCard({ result, rank }: { result: ShortlistResult; rank: nu
             </dd>
           </div>
         </dl>
+      )}
+
+      {implementationOpen && (
+        <div className="mt-4 space-y-5 border-t border-border/60 pt-4 text-sm">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="font-display font-semibold">Implementation &amp; feasibility</h3>
+              <span className="badge">{implementationPlan.feasibility.label}</span>
+            </div>
+            <p className="mt-2 text-muted-foreground">{implementationPlan.feasibility.rationale}</p>
+          </div>
+
+          <div>
+            <h3 className="font-display font-semibold">Integrates with</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {implementationPlan.integration.summary}
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+              {implementationPlan.integration.touchpoints.map((touchpoint) => (
+                <li key={touchpoint}>{touchpoint}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-display font-semibold">Suggested rollout</h3>
+            <ol className="mt-3 space-y-3">
+              {implementationPlan.actionPlan.map((phase, index) => (
+                <li key={phase.phase} className="grid grid-cols-[1.5rem_1fr] gap-2">
+                  <span className="font-display text-sm font-semibold text-accent">{index + 1}</span>
+                  <div>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="font-medium">{phase.phase}</span>
+                      <span className="text-xs text-muted-foreground">{phase.duration}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{phase.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
       )}
 
 
