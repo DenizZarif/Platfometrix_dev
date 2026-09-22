@@ -70,10 +70,17 @@ function MatchPage() {
 
   const config = category ? CATEGORY_CONFIG[category] : null;
 
-  const results = useMemo<ShortlistResult[]>(() => {
+  const [weightOverrides, setWeightOverrides] = useState<Record<string, number>>({});
+
+  const baseResults = useMemo<ShortlistResult[]>(() => {
     if (screen !== "results" || !category) return [];
     return MATCHERS[category](answers);
   }, [screen, answers, category]);
+
+  const results = useMemo<ShortlistResult[]>(() => {
+    if (screen !== "results" || !category) return [];
+    return MATCHERS[category](answers, weightOverrides);
+  }, [screen, answers, category, weightOverrides]);
 
   const doSave = useCallback(async () => {
     if (!user || !category) return;
