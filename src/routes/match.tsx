@@ -114,6 +114,7 @@ function MatchPage() {
     setStep(0);
     setCategory(null);
     setSaveState("idle");
+    setWeightOverrides({});
     setScreen("category");
   };
 
@@ -122,6 +123,7 @@ function MatchPage() {
     setAnswers(answersFromProfile(profile));
     setStep(0);
     setSaveState("idle");
+    setWeightOverrides({});
     setScreen("landing");
   };
 
