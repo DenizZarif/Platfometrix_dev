@@ -118,6 +118,7 @@ function MatchPage() {
     setCategory(null);
     setSaveState("idle");
     setWeightOverrides({});
+    setActiveScenario(null);
     setScreen("category");
   };
 
@@ -127,6 +128,7 @@ function MatchPage() {
     setStep(0);
     setSaveState("idle");
     setWeightOverrides({});
+    setActiveScenario(null);
     setScreen("landing");
   };
 
@@ -158,6 +160,8 @@ function MatchPage() {
           profile={profile}
           weightOverrides={weightOverrides}
           setWeightOverrides={setWeightOverrides}
+          activeScenario={activeScenario}
+          setActiveScenario={setActiveScenario}
           onRestart={restart}
           onSave={onSaveClick}
           saveState={saveState}
