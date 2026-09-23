@@ -127,9 +127,10 @@ export function ResultCard({
   const [costOpen, setCostOpen] = useState(false);
   const [implementationOpen, setImplementationOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
+  const [migrationOpen, setMigrationOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
   const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
-  const { implementationPlan, fitProfile, marketAdoption } = buildDetails(
+  const { implementationPlan, fitProfile, marketAdoption, migrationEstimate } = buildDetails(
     category,
     tool,
     answers,
