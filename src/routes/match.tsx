@@ -298,21 +298,40 @@ function Quiz({
             <div key={q.id}>
               <h2 className="font-display text-xl font-semibold">{q.label}</h2>
               {q.help && <p className="mt-1 text-sm text-muted-foreground">{q.help}</p>}
-              <div className="mt-4 grid gap-2">
-                {q.options.map((opt) => {
-                  const selected = Array.isArray(value) ? value.includes(opt) : value === opt;
-                  return (
-                    <button
-                      key={opt}
-                      onClick={() => toggle(q.id, opt, q.type === "multi")}
-                      className={cn("option", selected && "option-selected")}
-                    >
-                      <span className={cn("option-mark", q.type === "multi" && "rounded-[4px]")} />
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
+              {q.type === "single" && q.render === "dropdown" ? (
+                <div className="mt-4">
+                  <select
+                    value={typeof value === "string" ? value : ""}
+                    onChange={(e) => toggle(q.id, e.target.value, false)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+                  >
+                    <option value="" disabled>
+                      Select...
+                    </option>
+                    {q.options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="mt-4 grid gap-2">
+                  {q.options.map((opt) => {
+                    const selected = Array.isArray(value) ? value.includes(opt) : value === opt;
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() => toggle(q.id, opt, q.type === "multi")}
+                        className={cn("option", selected && "option-selected")}
+                      >
+                        <span className={cn("option-mark", q.type === "multi" && "rounded-[4px]")} />
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}

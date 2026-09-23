@@ -16,6 +16,11 @@ import {
   buildCrmFitProfile,
   buildWarehouseFitProfile,
 } from "@/lib/fitProfile";
+import {
+  buildBiMigrationEstimate,
+  buildCrmMigrationEstimate,
+  buildWarehouseMigrationEstimate,
+} from "@/lib/migrationEstimate";
 
 export interface ShortlistTool {
   id: string;
