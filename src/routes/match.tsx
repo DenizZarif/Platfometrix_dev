@@ -428,6 +428,31 @@ function Results({
         Ranked against your answers. Open any card to see exactly how the score was built.
       </p>
 
+      {category && (
+        <div className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-accent">
+            Try a scenario
+          </h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {SCENARIOS[category].map((s) => (
+              <button
+                key={s.id}
+                onClick={() => applyScenario(s)}
+                className={cn("option", activeScenario === s.id && "option-selected")}
+              >
+                <span className="option-mark" />
+                <span>
+                  <span className="block">{s.label}</span>
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {s.blurb}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <button
           onClick={() => setWeightsOpen(!weightsOpen)}
