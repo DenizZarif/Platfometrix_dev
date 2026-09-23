@@ -363,6 +363,8 @@ function Results({
   profile,
   weightOverrides,
   setWeightOverrides,
+  activeScenario,
+  setActiveScenario,
   onRestart,
   onSave,
   saveState,
@@ -374,6 +376,8 @@ function Results({
   profile: Profile | null;
   weightOverrides: Record<string, number>;
   setWeightOverrides: (w: Record<string, number>) => void;
+  activeScenario: string | null;
+  setActiveScenario: (id: string | null) => void;
   onRestart: () => void;
   onSave: () => void;
   saveState: "idle" | "saving" | "saved" | "error";
@@ -399,6 +403,13 @@ function Results({
     });
     next[key] = value;
     setWeightOverrides(next);
+    setActiveScenario(null);
+  };
+
+  const applyScenario = (scenario: (typeof SCENARIOS)[Category][number]) => {
+    setWeightOverrides(scenario.weights);
+    setActiveScenario(scenario.id);
+    setWeightsOpen(true);
   };
 
   const toggleSelect = (id: string) => {
