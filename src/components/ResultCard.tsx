@@ -64,12 +64,22 @@ function buildDetails(
   profile: Profile | null,
 ) {
   const resolvedTool = resolveTool(category, resultTool);
+  const currentOf = (key: string) => {
+    const raw = answers[key];
+    return typeof raw === "string" && raw ? raw : undefined;
+  };
   if (category === "bi") {
     const tool = resolvedTool as BiTool;
     return {
       implementationPlan: buildBiImplementationPlan(tool, answers, profile),
       fitProfile: buildBiFitProfile(tool),
       marketAdoption: tool.market_adoption,
+      migrationEstimate: buildBiMigrationEstimate(
+        currentOf("current_bi_tool"),
+        tool,
+        answers,
+        profile,
+      ),
     };
   }
   if (category === "crm") {
@@ -78,6 +88,12 @@ function buildDetails(
       implementationPlan: buildCrmImplementationPlan(tool, answers, profile),
       fitProfile: buildCrmFitProfile(tool),
       marketAdoption: tool.market_adoption,
+      migrationEstimate: buildCrmMigrationEstimate(
+        currentOf("current_crm_tool"),
+        tool,
+        answers,
+        profile,
+      ),
     };
   }
   const tool = resolvedTool as WarehouseTool;
@@ -85,6 +101,12 @@ function buildDetails(
     implementationPlan: buildWarehouseImplementationPlan(tool, answers, profile),
     fitProfile: buildWarehouseFitProfile(tool),
     marketAdoption: tool.market_adoption,
+    migrationEstimate: buildWarehouseMigrationEstimate(
+      currentOf("current_warehouse_tool"),
+      tool,
+      answers,
+      profile,
+    ),
   };
 }
 
