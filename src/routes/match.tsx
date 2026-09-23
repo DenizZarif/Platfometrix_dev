@@ -9,6 +9,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { answersFromProfile, fetchProfile, saveResult, type Profile } from "@/lib/profileStore";
 import { CATEGORY_CONFIG, MATCHERS, isCategory, type Category } from "@/lib/categories";
+import { SCENARIOS } from "@/lib/scenarios";
 
 export const Route = createFileRoute("/match")({
   validateSearch: (search: Record<string, unknown>): { category?: Category } => {
@@ -72,6 +73,7 @@ function MatchPage() {
   const config = category ? CATEGORY_CONFIG[category] : null;
 
   const [weightOverrides, setWeightOverrides] = useState<Record<string, number>>({});
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
 
   const baseResults = useMemo<ShortlistResult[]>(() => {
     if (screen !== "results" || !category) return [];
@@ -116,6 +118,7 @@ function MatchPage() {
     setCategory(null);
     setSaveState("idle");
     setWeightOverrides({});
+    setActiveScenario(null);
     setScreen("category");
   };
 
@@ -125,6 +128,7 @@ function MatchPage() {
     setStep(0);
     setSaveState("idle");
     setWeightOverrides({});
+    setActiveScenario(null);
     setScreen("landing");
   };
 
@@ -156,6 +160,8 @@ function MatchPage() {
           profile={profile}
           weightOverrides={weightOverrides}
           setWeightOverrides={setWeightOverrides}
+          activeScenario={activeScenario}
+          setActiveScenario={setActiveScenario}
           onRestart={restart}
           onSave={onSaveClick}
           saveState={saveState}
@@ -357,6 +363,8 @@ function Results({
   profile,
   weightOverrides,
   setWeightOverrides,
+  activeScenario,
+  setActiveScenario,
   onRestart,
   onSave,
   saveState,
@@ -368,6 +376,8 @@ function Results({
   profile: Profile | null;
   weightOverrides: Record<string, number>;
   setWeightOverrides: (w: Record<string, number>) => void;
+  activeScenario: string | null;
+  setActiveScenario: (id: string | null) => void;
   onRestart: () => void;
   onSave: () => void;
   saveState: "idle" | "saving" | "saved" | "error";
@@ -393,6 +403,13 @@ function Results({
     });
     next[key] = value;
     setWeightOverrides(next);
+    setActiveScenario(null);
+  };
+
+  const applyScenario = (scenario: (typeof SCENARIOS)[Category][number]) => {
+    setWeightOverrides(scenario.weights);
+    setActiveScenario(scenario.id);
+    setWeightsOpen(true);
   };
 
   const toggleSelect = (id: string) => {
@@ -410,6 +427,31 @@ function Results({
       <p className="mt-3 text-muted-foreground">
         Ranked against your answers. Open any card to see exactly how the score was built.
       </p>
+
+      {category && (
+        <div className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-accent">
+            Try a scenario
+          </h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {SCENARIOS[category].map((s) => (
+              <button
+                key={s.id}
+                onClick={() => applyScenario(s)}
+                className={cn("option", activeScenario === s.id && "option-selected")}
+              >
+                <span className="option-mark" />
+                <span>
+                  <span className="block">{s.label}</span>
+                  <span className="block text-xs font-normal text-muted-foreground">
+                    {s.blurb}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <button
@@ -444,7 +486,13 @@ function Results({
                 </div>
               );
             })}
-            <button onClick={() => setWeightOverrides({})} className="btn-ghost">
+            <button
+              onClick={() => {
+                setWeightOverrides({});
+                setActiveScenario(null);
+              }}
+              className="btn-ghost"
+            >
               Reset to recommended
             </button>
           </div>
