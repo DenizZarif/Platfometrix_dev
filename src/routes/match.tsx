@@ -9,6 +9,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { answersFromProfile, fetchProfile, saveResult, type Profile } from "@/lib/profileStore";
 import { CATEGORY_CONFIG, MATCHERS, isCategory, type Category } from "@/lib/categories";
+import { SCENARIOS } from "@/lib/scenarios";
 
 export const Route = createFileRoute("/match")({
   validateSearch: (search: Record<string, unknown>): { category?: Category } => {
@@ -72,6 +73,7 @@ function MatchPage() {
   const config = category ? CATEGORY_CONFIG[category] : null;
 
   const [weightOverrides, setWeightOverrides] = useState<Record<string, number>>({});
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
 
   const baseResults = useMemo<ShortlistResult[]>(() => {
     if (screen !== "results" || !category) return [];
