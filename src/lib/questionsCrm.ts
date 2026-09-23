@@ -70,5 +70,5 @@ export const CRM_STEPS: Question[][] = [
   CRM_QUESTIONS.slice(3, 5),
   CRM_QUESTIONS.slice(5, 7),
   CRM_QUESTIONS.slice(7, 9),
-  [CRM_QUESTIONS[9]],
+  CRM_QUESTIONS.slice(9, 10),
 ];

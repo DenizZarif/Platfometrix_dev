@@ -53,7 +53,7 @@ export const STEPS: Question[][] = [
   QUESTIONS.slice(3, 5),
   QUESTIONS.slice(5, 8),
   QUESTIONS.slice(8, 11),
-  [QUESTIONS[11]],
+  QUESTIONS.slice(11, 12),
 ];
 
 export type Answers = Record<string, string | string[]>;
