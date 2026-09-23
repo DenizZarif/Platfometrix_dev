@@ -210,7 +210,38 @@ export function ResultCard({
             ? "Hide best-fit profile & popularity"
             : "Show best-fit profile & popularity"}
         </button>
+        {migrationEstimate.applicable && (
+          <button
+            onClick={() => setMigrationOpen(!migrationOpen)}
+            className="text-xs font-medium uppercase tracking-wider text-accent"
+          >
+            {migrationOpen ? "Hide migration estimate" : "Show migration estimate"}
+          </button>
+        )}
       </div>
+
+      {migrationOpen && migrationEstimate.applicable && (
+        <div className="mt-4 space-y-5 border-t border-border/60 pt-4 text-sm">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="font-display font-semibold">
+                Migrating from {migrationEstimate.currentToolLabel}
+              </h3>
+              <span className="badge">{migrationEstimate.effort.label}</span>
+            </div>
+            <p className="mt-2 text-muted-foreground">{migrationEstimate.effort.rationale}</p>
+          </div>
+          <div>
+            <h3 className="font-display font-semibold">What this involves</h3>
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+              {migrationEstimate.whatMoves.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground">{migrationEstimate.costNote}</p>
+        </div>
+      )}
 
       {costOpen && costEstimate && (
         <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
