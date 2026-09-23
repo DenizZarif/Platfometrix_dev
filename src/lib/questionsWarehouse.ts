@@ -66,6 +66,32 @@ export const WAREHOUSE_QUESTIONS: Question[] = [
   },
   shared("compliance_needs"),
   shared("customization_preference"),
+  {
+    id: "current_warehouse_tool",
+    label: "What do you use for your data warehouse today, if anything?",
+    type: "single",
+    render: "dropdown",
+    options: [
+      "Snowflake",
+      "Google BigQuery",
+      "Amazon Redshift",
+      "Databricks",
+      "Microsoft Fabric",
+      "ClickHouse Cloud",
+      "Firebolt",
+      "SingleStore",
+      "MotherDuck",
+      "Dremio",
+      "Teradata Vantage",
+      "Oracle Autonomous Data Warehouse",
+      "IBM Db2 Warehouse",
+      "Yellowbrick Data",
+      "Apache Druid",
+      "No formal warehouse yet",
+      "Something else not listed",
+      "Not sure",
+    ],
+  },
 ];
 
 export const WAREHOUSE_STEPS: Question[][] = [
@@ -73,4 +99,5 @@ export const WAREHOUSE_STEPS: Question[][] = [
   WAREHOUSE_QUESTIONS.slice(3, 6),
   WAREHOUSE_QUESTIONS.slice(6, 9),
   WAREHOUSE_QUESTIONS.slice(9, 11),
+  WAREHOUSE_QUESTIONS.slice(11, 12),
 ];

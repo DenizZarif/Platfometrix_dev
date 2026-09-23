@@ -16,6 +16,11 @@ import {
   buildCrmFitProfile,
   buildWarehouseFitProfile,
 } from "@/lib/fitProfile";
+import {
+  buildBiMigrationEstimate,
+  buildCrmMigrationEstimate,
+  buildWarehouseMigrationEstimate,
+} from "@/lib/migrationEstimate";
 
 export interface ShortlistTool {
   id: string;
@@ -59,12 +64,22 @@ function buildDetails(
   profile: Profile | null,
 ) {
   const resolvedTool = resolveTool(category, resultTool);
+  const currentOf = (key: string) => {
+    const raw = answers[key];
+    return typeof raw === "string" && raw ? raw : undefined;
+  };
   if (category === "bi") {
     const tool = resolvedTool as BiTool;
     return {
       implementationPlan: buildBiImplementationPlan(tool, answers, profile),
       fitProfile: buildBiFitProfile(tool),
       marketAdoption: tool.market_adoption,
+      migrationEstimate: buildBiMigrationEstimate(
+        currentOf("current_bi_tool"),
+        tool,
+        answers,
+        profile,
+      ),
     };
   }
   if (category === "crm") {
@@ -73,6 +88,12 @@ function buildDetails(
       implementationPlan: buildCrmImplementationPlan(tool, answers, profile),
       fitProfile: buildCrmFitProfile(tool),
       marketAdoption: tool.market_adoption,
+      migrationEstimate: buildCrmMigrationEstimate(
+        currentOf("current_crm_tool"),
+        tool,
+        answers,
+        profile,
+      ),
     };
   }
   const tool = resolvedTool as WarehouseTool;
@@ -80,6 +101,12 @@ function buildDetails(
     implementationPlan: buildWarehouseImplementationPlan(tool, answers, profile),
     fitProfile: buildWarehouseFitProfile(tool),
     marketAdoption: tool.market_adoption,
+    migrationEstimate: buildWarehouseMigrationEstimate(
+      currentOf("current_warehouse_tool"),
+      tool,
+      answers,
+      profile,
+    ),
   };
 }
 
@@ -100,9 +127,10 @@ export function ResultCard({
   const [costOpen, setCostOpen] = useState(false);
   const [implementationOpen, setImplementationOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
+  const [migrationOpen, setMigrationOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
   const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
-  const { implementationPlan, fitProfile, marketAdoption } = buildDetails(
+  const { implementationPlan, fitProfile, marketAdoption, migrationEstimate } = buildDetails(
     category,
     tool,
     answers,
@@ -182,7 +210,38 @@ export function ResultCard({
             ? "Hide best-fit profile & popularity"
             : "Show best-fit profile & popularity"}
         </button>
+        {migrationEstimate.applicable && (
+          <button
+            onClick={() => setMigrationOpen(!migrationOpen)}
+            className="text-xs font-medium uppercase tracking-wider text-accent"
+          >
+            {migrationOpen ? "Hide migration estimate" : "Show migration estimate"}
+          </button>
+        )}
       </div>
+
+      {migrationOpen && migrationEstimate.applicable && (
+        <div className="mt-4 space-y-5 border-t border-border/60 pt-4 text-sm">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="font-display font-semibold">
+                Migrating from {migrationEstimate.currentToolLabel}
+              </h3>
+              <span className="badge">{migrationEstimate.effort.label}</span>
+            </div>
+            <p className="mt-2 text-muted-foreground">{migrationEstimate.effort.rationale}</p>
+          </div>
+          <div>
+            <h3 className="font-display font-semibold">What this involves</h3>
+            <ul className="mt-2 list-disc space-y-1 pl-4 text-xs">
+              {migrationEstimate.whatMoves.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground">{migrationEstimate.costNote}</p>
+        </div>
+      )}
 
       {costOpen && costEstimate && (
         <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">

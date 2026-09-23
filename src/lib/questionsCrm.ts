@@ -36,6 +36,33 @@ export const CRM_QUESTIONS: Question[] = [
   },
   shared("compliance_needs"),
   shared("customization_preference"),
+  {
+    id: "current_crm_tool",
+    label: "What do you use for CRM today, if anything?",
+    type: "single",
+    render: "dropdown",
+    options: [
+      "Salesforce Sales Cloud",
+      "Microsoft Dynamics 365 Sales",
+      "HubSpot CRM",
+      "Zoho CRM",
+      "Pipedrive",
+      "Freshsales",
+      "Copper",
+      "Close",
+      "Nutshell",
+      "Attio",
+      "Folk",
+      "monday Sales CRM",
+      "Insightly",
+      "SugarCRM",
+      "SuiteCRM",
+      "Spreadsheets or a shared inbox",
+      "Nothing yet — this would be our first CRM",
+      "Something else not listed",
+      "Not sure",
+    ],
+  },
 ];
 
 export const CRM_STEPS: Question[][] = [
@@ -43,4 +70,5 @@ export const CRM_STEPS: Question[][] = [
   CRM_QUESTIONS.slice(3, 5),
   CRM_QUESTIONS.slice(5, 7),
   CRM_QUESTIONS.slice(7, 9),
+  CRM_QUESTIONS.slice(9, 10),
 ];

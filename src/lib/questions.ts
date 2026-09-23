@@ -4,6 +4,7 @@ export interface Question {
   help?: string;
   type: "single" | "multi";
   options: string[];
+  render?: "buttons" | "dropdown";
 }
 
 export const QUESTIONS: Question[] = [
@@ -18,6 +19,33 @@ export const QUESTIONS: Question[] = [
   { id: "primary_data_source", label: "Where does your data live?", type: "single", options: ["Spreadsheets/files", "One cloud warehouse (Snowflake/BigQuery/Redshift)", "Multiple disparate sources", "Databases only"] },
   { id: "data_volume", label: "How much data are we talking about?", type: "single", options: ["Small (<1M rows)", "Medium (1-100M rows)", "Large (100M+ rows)", "Not sure"] },
   { id: "customization_preference", label: "Out of the box, or tailored?", type: "single", options: ["Works well out of the box", "Happy to configure/customize to fit our process"] },
+  {
+    id: "current_bi_tool",
+    label: "What do you use for BI/reporting today, if anything?",
+    type: "single",
+    render: "dropdown",
+    options: [
+      "Tableau",
+      "Microsoft Power BI",
+      "Qlik Sense",
+      "MicroStrategy",
+      "Looker (Google Cloud)",
+      "Sisense",
+      "Domo",
+      "Zoho Analytics",
+      "Omni",
+      "Sigma Computing",
+      "Hex",
+      "ThoughtSpot",
+      "Metabase",
+      "Apache Superset",
+      "Google Looker Studio",
+      "Spreadsheets / manual reporting",
+      "Nothing yet — this would be our first BI tool",
+      "Something else not listed",
+      "Not sure",
+    ],
+  },
 ];
 
 export const STEPS: Question[][] = [
@@ -25,6 +53,7 @@ export const STEPS: Question[][] = [
   QUESTIONS.slice(3, 5),
   QUESTIONS.slice(5, 8),
   QUESTIONS.slice(8, 11),
+  QUESTIONS.slice(11, 12),
 ];
 
 export type Answers = Record<string, string | string[]>;
