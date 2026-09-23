@@ -486,7 +486,13 @@ function Results({
                 </div>
               );
             })}
-            <button onClick={() => setWeightOverrides({})} className="btn-ghost">
+            <button
+              onClick={() => {
+                setWeightOverrides({});
+                setActiveScenario(null);
+              }}
+              className="btn-ghost"
+            >
               Reset to recommended
             </button>
           </div>
