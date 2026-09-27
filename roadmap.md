@@ -10,3 +10,4 @@
 - [x] Verify types, build, unchanged scores, and all category displays.
 
 - [x] Migration estimate: optional "what do you use today" dropdown per category + computed migration section on result cards
+- [x] Exit-risk score: always-visible lock-in panel on every result card (src/lib/exitRisk.ts + ResultCard toggle), verified across BI/CRM/warehouse

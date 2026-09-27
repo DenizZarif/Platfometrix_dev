@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BI_TOOLS, type BiTool } from "@/data/biTools";
 import { CRM_TOOLS, type CrmTool } from "@/data/crmTools";
 import { WAREHOUSE_TOOLS, type WarehouseTool } from "@/data/warehouseTools";
+import { buildBiExitRisk, buildCrmExitRisk, buildWarehouseExitRisk } from "@/lib/exitRisk";
 import type { CriterionResult } from "@/lib/matcher";
 import type { CostEstimate } from "@/lib/costEstimate";
 import type { Answers } from "@/lib/questions";
@@ -72,6 +73,7 @@ function buildDetails(
     const tool = resolvedTool as BiTool;
     return {
       implementationPlan: buildBiImplementationPlan(tool, answers, profile),
+      exitRisk: buildBiExitRisk(tool),
       fitProfile: buildBiFitProfile(tool),
       marketAdoption: tool.market_adoption,
       migrationEstimate: buildBiMigrationEstimate(
@@ -86,6 +88,7 @@ function buildDetails(
     const tool = resolvedTool as CrmTool;
     return {
       implementationPlan: buildCrmImplementationPlan(tool, answers, profile),
+      exitRisk: buildCrmExitRisk(tool),
       fitProfile: buildCrmFitProfile(tool),
       marketAdoption: tool.market_adoption,
       migrationEstimate: buildCrmMigrationEstimate(
@@ -99,6 +102,7 @@ function buildDetails(
   const tool = resolvedTool as WarehouseTool;
   return {
     implementationPlan: buildWarehouseImplementationPlan(tool, answers, profile),
+    exitRisk: buildWarehouseExitRisk(tool),
     fitProfile: buildWarehouseFitProfile(tool),
     marketAdoption: tool.market_adoption,
     migrationEstimate: buildWarehouseMigrationEstimate(
@@ -128,9 +132,10 @@ export function ResultCard({
   const [implementationOpen, setImplementationOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
   const [migrationOpen, setMigrationOpen] = useState(false);
+  const [exitRiskOpen, setExitRiskOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
   const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
-  const { implementationPlan, fitProfile, marketAdoption, migrationEstimate } = buildDetails(
+  const { implementationPlan, fitProfile, marketAdoption, migrationEstimate, exitRisk } = buildDetails(
     category,
     tool,
     answers,
@@ -209,6 +214,12 @@ export function ResultCard({
           {fitOpen
             ? "Hide best-fit profile & popularity"
             : "Show best-fit profile & popularity"}
+        </button>
+        <button
+          onClick={() => setExitRiskOpen(!exitRiskOpen)}
+          className="text-xs font-medium uppercase tracking-wider text-accent"
+        >
+          {exitRiskOpen ? "Hide exit-risk score" : "Show exit-risk score"}
         </button>
         {migrationEstimate.applicable && (
           <button
@@ -349,6 +360,31 @@ export function ResultCard({
               ))}
             </ul>
           </div>
+        </div>
+      )}
+
+      {exitRiskOpen && (
+        <div className="mt-4 space-y-4 border-t border-border/60 pt-4 text-sm">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="font-display font-semibold">Switching away later</h3>
+              <span className="badge">{exitRisk.label}</span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              How much lock-in to expect if you ever want to leave {tool.name} — separate from the
+              migration-in cost above, and based on how the tool itself is built rather than your
+              specific setup.
+            </p>
+          </div>
+          {exitRisk.factors.length > 0 ? (
+            <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+              {exitRisk.factors.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-muted-foreground">{exitRisk.reassurance}</p>
+          )}
         </div>
       )}
 
