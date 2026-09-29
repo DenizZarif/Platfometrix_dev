@@ -6,6 +6,7 @@ export interface ExitRisk {
   label: "Low" | "Moderate" | "High";
   score: number;
   factors: string[];
+  factorCodes: string[];
   reassurance: string | null;
 }
 
