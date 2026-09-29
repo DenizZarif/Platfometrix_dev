@@ -6,6 +6,7 @@ export interface ExitRisk {
   label: "Low" | "Moderate" | "High";
   score: number;
   factors: string[];
+  factorCodes: string[];
   reassurance: string | null;
 }
 
@@ -36,9 +37,11 @@ const REASSURANCE =
 export function buildBiExitRisk(tool: BiTool): ExitRisk {
   let score = CUSTOMIZATION_SCORE[tool.customization_level] ?? 0;
   const factors: string[] = [];
+  const factorCodes: string[] = [];
 
   if (tool.customization_level !== "ootb") {
     factors.push(CUSTOMIZATION_FACTOR[tool.customization_level]!);
+    factorCodes.push(`customization_${tool.customization_level}`);
   }
 
   if (tool.report_builder !== "sql") {
@@ -46,6 +49,7 @@ export function buildBiExitRisk(tool: BiTool): ExitRisk {
     factors.push(
       `${tool.report_builder === "dragdrop" ? "Drag-and-drop" : "GUI-based"} report building — dashboards built this way typically don't export cleanly to another tool's format.`,
     );
+    factorCodes.push("report_builder_gui");
   }
 
   if (tool.connector_tier === "high") {
@@ -53,6 +57,7 @@ export function buildBiExitRisk(tool: BiTool): ExitRisk {
     factors.push(
       "Wide connector footprint — the more data sources and systems you've wired to it, the more integrations there are to rewire on the way out.",
     );
+    factorCodes.push("connector_tier_high");
   }
 
   if (tool.embed_capability) {
@@ -60,6 +65,7 @@ export function buildBiExitRisk(tool: BiTool): ExitRisk {
     factors.push(
       "Supports embedding — if you've embedded it in your own product, customers or internal tools may depend on it directly, not just your team.",
     );
+    factorCodes.push("embed_capability");
   }
 
   if (hasPartnerDependency(tool.hidden_costs)) {
@@ -67,12 +73,14 @@ export function buildBiExitRisk(tool: BiTool): ExitRisk {
     factors.push(
       "Implementation partners are commonly involved — expect to need outside help leaving, the same way you likely needed it to set up.",
     );
+    factorCodes.push("partner_dependency");
   }
 
   return {
     label: labelFromScore(score, 1, 5),
     score,
     factors,
+    factorCodes,
     reassurance: factors.length === 0 ? REASSURANCE : null,
   };
 }
@@ -80,9 +88,11 @@ export function buildBiExitRisk(tool: BiTool): ExitRisk {
 export function buildCrmExitRisk(tool: CrmTool): ExitRisk {
   let score = CUSTOMIZATION_SCORE[tool.customization_level] ?? 0;
   const factors: string[] = [];
+  const factorCodes: string[] = [];
 
   if (tool.customization_level !== "ootb") {
     factors.push(CUSTOMIZATION_FACTOR[tool.customization_level]!);
+    factorCodes.push(`customization_${tool.customization_level}`);
   }
 
   if (tool.marketing_automation_tier === "advanced") {
@@ -90,6 +100,7 @@ export function buildCrmExitRisk(tool: CrmTool): ExitRisk {
     factors.push(
       "Advanced marketing automation — sequences, scoring rules and workflows built here rarely transfer, they get rebuilt from scratch elsewhere.",
     );
+    factorCodes.push("marketing_automation_advanced");
   }
 
   if (tool.connector_tier === "high") {
@@ -97,6 +108,7 @@ export function buildCrmExitRisk(tool: CrmTool): ExitRisk {
     factors.push(
       "Wide connector footprint — the more of your other tools you've wired to it, the more integrations there are to rewire on the way out.",
     );
+    factorCodes.push("connector_tier_high");
   }
 
   if (hasPartnerDependency(tool.hidden_costs)) {
@@ -104,12 +116,14 @@ export function buildCrmExitRisk(tool: CrmTool): ExitRisk {
     factors.push(
       "Implementation partners are commonly involved — expect to need outside help leaving, the same way you likely needed it to set up.",
     );
+    factorCodes.push("partner_dependency");
   }
 
   return {
     label: labelFromScore(score, 1, 4),
     score,
     factors,
+    factorCodes,
     reassurance: factors.length === 0 ? REASSURANCE : null,
   };
 }
@@ -117,9 +131,11 @@ export function buildCrmExitRisk(tool: CrmTool): ExitRisk {
 export function buildWarehouseExitRisk(tool: WarehouseTool): ExitRisk {
   let score = CUSTOMIZATION_SCORE[tool.customization_level] ?? 0;
   const factors: string[] = [];
+  const factorCodes: string[] = [];
 
   if (tool.customization_level !== "ootb") {
     factors.push(CUSTOMIZATION_FACTOR[tool.customization_level]!);
+    factorCodes.push(`customization_${tool.customization_level}`);
   }
 
   if (tool.deployment_model === "cloud") {
@@ -127,11 +143,13 @@ export function buildWarehouseExitRisk(tool: WarehouseTool): ExitRisk {
     factors.push(
       "Fully managed, proprietary compute — your data typically needs to be exported and reloaded elsewhere, unlike a self-hosted engine you control directly.",
     );
+    factorCodes.push("deployment_cloud");
   } else if (tool.deployment_model === "hybrid") {
     score += 1;
     factors.push(
       "Hybrid deployment — some pieces run in a managed service, which still means some export and reload work on the way out.",
     );
+    factorCodes.push("deployment_hybrid");
   }
 
   if (tool.cloud_providers.length <= 1) {
@@ -139,6 +157,7 @@ export function buildWarehouseExitRisk(tool: WarehouseTool): ExitRisk {
     factors.push(
       `Tied to a single cloud provider (${tool.cloud_providers[0] ?? "one provider"}) — leaving may mean a cloud migration too, not just a warehouse swap.`,
     );
+    factorCodes.push("single_cloud_provider");
   }
 
   if (tool.native_ingestion_tier === "high") {
@@ -146,17 +165,20 @@ export function buildWarehouseExitRisk(tool: WarehouseTool): ExitRisk {
     factors.push(
       "Deep native ingestion — pipelines built directly in-platform need to be rebuilt, not just repointed, if you migrate.",
     );
+    factorCodes.push("native_ingestion_high");
   }
 
   if (mentionsMigration(tool.hidden_costs)) {
     score += 1;
     factors.push("Vendor materials themselves flag migration off this platform as a notable cost.");
+    factorCodes.push("migration_mentioned");
   }
 
   return {
     label: labelFromScore(score, 1, 5),
     score,
     factors,
+    factorCodes,
     reassurance: factors.length === 0 ? REASSURANCE : null,
   };
 }

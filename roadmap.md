@@ -11,3 +11,4 @@
 
 - [x] Migration estimate: optional "what do you use today" dropdown per category + computed migration section on result cards
 - [x] Exit-risk score: always-visible lock-in panel on every result card (src/lib/exitRisk.ts + ResultCard toggle), verified across BI/CRM/warehouse
+- [x] Vendor negotiation checklist: factorCodes parallel array in exitRisk.ts (additive), negotiationChecklist.ts (NEGOTIATION_ASKS + universal termination tip, dedup), ResultCard "Show negotiation checklist" toggle + "Before you sign" panel right after exit-risk panel; zero-factor tools show only the universal tip. Verified in browser across BI/CRM/warehouse; typecheck and build clean.

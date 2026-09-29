@@ -3,6 +3,7 @@ import { BI_TOOLS, type BiTool } from "@/data/biTools";
 import { CRM_TOOLS, type CrmTool } from "@/data/crmTools";
 import { WAREHOUSE_TOOLS, type WarehouseTool } from "@/data/warehouseTools";
 import { buildBiExitRisk, buildCrmExitRisk, buildWarehouseExitRisk } from "@/lib/exitRisk";
+import { buildNegotiationChecklist } from "@/lib/negotiationChecklist";
 import type { CriterionResult } from "@/lib/matcher";
 import type { CostEstimate } from "@/lib/costEstimate";
 import type { Answers } from "@/lib/questions";
@@ -133,6 +134,7 @@ export function ResultCard({
   const [fitOpen, setFitOpen] = useState(false);
   const [migrationOpen, setMigrationOpen] = useState(false);
   const [exitRiskOpen, setExitRiskOpen] = useState(false);
+  const [negotiationOpen, setNegotiationOpen] = useState(false);
   const { tool, finalScore, criteria, fits, caveat, costEstimate } = result;
   const isFree = costEstimate?.pricingModelLabel === "Free / open-source";
   const { implementationPlan, fitProfile, marketAdoption, migrationEstimate, exitRisk } = buildDetails(
@@ -141,6 +143,7 @@ export function ResultCard({
     answers,
     profile,
   );
+  const negotiationChecklist = buildNegotiationChecklist(exitRisk);
 
   return (
     <article className="rounded-2xl border border-border bg-card p-6">
@@ -220,6 +223,12 @@ export function ResultCard({
           className="text-xs font-medium uppercase tracking-wider text-accent"
         >
           {exitRiskOpen ? "Hide exit-risk score" : "Show exit-risk score"}
+        </button>
+        <button
+          onClick={() => setNegotiationOpen(!negotiationOpen)}
+          className="text-xs font-medium uppercase tracking-wider text-accent"
+        >
+          {negotiationOpen ? "Hide negotiation checklist" : "Show negotiation checklist"}
         </button>
         {migrationEstimate.applicable && (
           <button
@@ -385,6 +394,23 @@ export function ResultCard({
           ) : (
             <p className="text-xs text-muted-foreground">{exitRisk.reassurance}</p>
           )}
+        </div>
+      )}
+
+      {negotiationOpen && (
+        <div className="mt-4 space-y-4 border-t border-border/60 pt-4 text-sm">
+          <div>
+            <h3 className="font-display font-semibold">Before you sign</h3>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Concrete things worth confirming in writing with {tool.name} before you sign,
+              based on the lock-in factors above.
+            </p>
+          </div>
+          <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+            {negotiationChecklist.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </div>
       )}
 
