@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as MatchRouteImport } from './routes/match'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StackRouteImport } from './routes/stack'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as GroupCodeRouteImport } from './routes/group.$code'
 
@@ -48,6 +49,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StackRoute = StackRouteImport.update({
+  id: '/stack',
+  path: '/stack',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/match': typeof MatchRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/stack': typeof StackRoute
   '/welcome': typeof WelcomeRoute
   '/group/$code': typeof GroupCodeRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/match': typeof MatchRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/stack': typeof StackRoute
   '/welcome': typeof WelcomeRoute
   '/group/$code': typeof GroupCodeRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/match': typeof MatchRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
+  '/stack': typeof StackRoute
   '/welcome': typeof WelcomeRoute
   '/group/$code': typeof GroupCodeRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/match'
     | '/profile'
     | '/settings'
+    | '/stack'
     | '/welcome'
     | '/group/$code'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/match'
     | '/profile'
     | '/settings'
+    | '/stack'
     | '/welcome'
     | '/group/$code'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/match'
     | '/profile'
     | '/settings'
+    | '/stack'
     | '/welcome'
     | '/group/$code'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   MatchRoute: typeof MatchRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
+  StackRoute: typeof StackRoute
   WelcomeRoute: typeof WelcomeRoute
   GroupCodeRoute: typeof GroupCodeRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stack': {
+      id: '/stack'
+      path: '/stack'
+      fullPath: '/stack'
+      preLoaderRoute: typeof StackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/welcome': {
       id: '/welcome'
       path: '/welcome'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   MatchRoute: MatchRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
+  StackRoute: StackRoute,
   WelcomeRoute: WelcomeRoute,
   GroupCodeRoute: GroupCodeRoute,
 }

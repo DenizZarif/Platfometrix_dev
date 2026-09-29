@@ -43,7 +43,7 @@ const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 type ResultCategory = "bi" | "crm" | "warehouse";
 
-function resolveTool(
+export function resolveTool(
   category: ResultCategory,
   resultTool: ShortlistTool,
 ) {

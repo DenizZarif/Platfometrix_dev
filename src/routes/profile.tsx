@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { addStackItemFromMatch, listStackItems, type StackItem } from "@/lib/stackStore";
 import { useEffect, useState } from "react";
 import { QUESTIONS } from "@/lib/questions";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,15 @@ function ProfilePage() {
   const [rows, setRows] = useState<SavedResultRow[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [stack, setStack] = useState<StackItem[]>([]);
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+
+  const refreshStack = () => {
+    if (!user) return;
+    listStackItems(user.id)
+      .then(setStack)
+      .catch(() => setStack([]));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -63,6 +73,9 @@ function ProfilePage() {
     listSavedResults(user.id)
       .then(setRows)
       .catch(() => setRows([]));
+    listStackItems(user.id)
+      .then(setStack)
+      .catch(() => setStack([]));
   }, [user]);
 
   if (loading) {
@@ -211,16 +224,43 @@ function ProfilePage() {
 
                   {open && (
                     <div className="mt-5 space-y-4">
-                      {row.results.map((r, i) => (
-                        <ResultCard
-                          key={r.tool.id}
-                          result={r}
-                          rank={i + 1}
-                          category={row.category}
-                          answers={row.answers}
-                          profile={profile}
-                        />
-                      ))}
+                      {row.results.map((r, i) => {
+                        const inStack = stack.some(
+                          (s) => s.tool_id === r.tool.id && s.category === row.category,
+                        );
+                        const key = `${row.id}:${r.tool.id}`;
+                        return (
+                          <div key={r.tool.id} className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <button
+                                disabled={inStack}
+                                onClick={() => {
+                                  void addStackItemFromMatch(user.id, row.category, r.tool, row.answers)
+                                    .then(() => {
+                                      setJustAdded(key);
+                                      refreshStack();
+                                    });
+                                }}
+                                className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                              >
+                                {inStack ? "Already in your stack" : "Add to my stack"}
+                              </button>
+                              {justAdded === key && (
+                                <Link to="/stack" className="text-xs text-accent">
+                                  Added — view in My Stack
+                                </Link>
+                              )}
+                            </div>
+                            <ResultCard
+                              result={r}
+                              rank={i + 1}
+                              category={row.category}
+                              answers={row.answers}
+                              profile={profile}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
