@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      group_sessions: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string | null
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+        }
+        Relationships: []
+      }
+      group_submissions: {
+        Row: {
+          answers: Json
+          id: string
+          participant_name: string
+          results: Json
+          session_id: string
+          submitted_at: string
+        }
+        Insert: {
+          answers: Json
+          id?: string
+          participant_name: string
+          results: Json
+          session_id: string
+          submitted_at?: string
+        }
+        Update: {
+          answers?: Json
+          id?: string
+          participant_name?: string
+          results?: Json
+          session_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_submissions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "group_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           budget_range: string | null

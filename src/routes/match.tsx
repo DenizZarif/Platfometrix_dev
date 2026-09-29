@@ -10,6 +10,94 @@ import { useAuth } from "@/hooks/useAuth";
 import { answersFromProfile, fetchProfile, saveResult, type Profile } from "@/lib/profileStore";
 import { CATEGORY_CONFIG, MATCHERS, isCategory, type Category } from "@/lib/categories";
 import { SCENARIOS } from "@/lib/scenarios";
+import { createGroupSession, submitGroupAnswer } from "@/lib/groupSession";
+
+function InviteCard({
+  category,
+  answers,
+  results,
+}: {
+  category: Category;
+  answers: Answers;
+  results: ShortlistResult[];
+}) {
+  const { user } = useAuth();
+  const [name, setName] = useState("");
+  const [label, setLabel] = useState("");
+  const [state, setState] = useState<"idle" | "creating" | "error">("idle");
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const create = async () => {
+    if (!name.trim()) return;
+    setState("creating");
+    try {
+      const session = await createGroupSession(category, label.trim() || null, user?.id ?? null);
+      await submitGroupAnswer(session.id, name.trim(), answers, results);
+      setLink(`${window.location.origin}/group/${session.code}`);
+      setState("idle");
+    } catch {
+      setState("error");
+    }
+  };
+
+  return (
+    <div className="mt-10 rounded-2xl border border-border bg-card p-6">
+      <h3 className="font-display text-lg font-semibold">Invite stakeholders to compare</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Get others on your team to answer the same questions, and compare results side by side — no account needed for them.
+      </p>
+      {link ? (
+        <div className="mt-4 flex gap-2">
+          <input
+            readOnly
+            value={link}
+            aria-label="Shareable link"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          />
+          <button
+            onClick={() => {
+              void navigator.clipboard?.writeText(link);
+              setCopied(true);
+            }}
+            className="btn-ghost"
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            aria-label="Your name"
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+          <input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder='Label (optional, e.g. "Q3 BI pick")'
+            aria-label="Evaluation label"
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+          <div className="flex items-center gap-4 sm:col-span-2">
+            <button
+              onClick={create}
+              disabled={!name.trim() || state === "creating"}
+              className="btn-accent disabled:opacity-40"
+            >
+              {state === "creating" ? "Creating…" : "Create shareable link"}
+            </button>
+            {state === "error" && (
+              <span className="text-sm text-destructive">Couldn't create the link — please try again.</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/match")({
   validateSearch: (search: Record<string, unknown>): { category?: Category } => {
@@ -237,7 +325,7 @@ function Landing({
   );
 }
 
-function Quiz({
+export function Quiz({
   steps,
   questions: allQuestions,
   step,
@@ -554,6 +642,8 @@ function Results({
           );
         })}
       </div>
+
+      {category && <InviteCard category={category} answers={answers} results={results} />}
 
       <div className="mt-10 flex flex-wrap items-center gap-4">
         <button onClick={onRestart} className="btn-ghost">

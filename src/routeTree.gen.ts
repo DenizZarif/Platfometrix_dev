@@ -16,6 +16,7 @@ import { Route as MatchRouteImport } from './routes/match'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as GroupCodeRouteImport } from './routes/group.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GroupCodeRoute = GroupCodeRouteImport.update({
+  id: '/group/$code',
+  path: '/group/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/welcome': typeof WelcomeRoute
+  '/group/$code': typeof GroupCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/welcome': typeof WelcomeRoute
+  '/group/$code': typeof GroupCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,14 +88,29 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/welcome': typeof WelcomeRoute
+  '/group/$code': typeof GroupCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/guide' | '/login' | '/match' | '/profile' | '/settings' | '/welcome'
+    | '/'
+    | '/guide'
+    | '/login'
+    | '/match'
+    | '/profile'
+    | '/settings'
+    | '/welcome'
+    | '/group/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/guide' | '/login' | '/match' | '/profile' | '/settings' | '/welcome'
+    | '/'
+    | '/guide'
+    | '/login'
+    | '/match'
+    | '/profile'
+    | '/settings'
+    | '/welcome'
+    | '/group/$code'
   id:
     | '__root__'
     | '/'
@@ -97,6 +120,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/welcome'
+    | '/group/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -107,6 +131,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   WelcomeRoute: typeof WelcomeRoute
+  GroupCodeRoute: typeof GroupCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -160,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/group/$code': {
+      id: '/group/$code'
+      path: '/group/$code'
+      fullPath: '/group/$code'
+      preLoaderRoute: typeof GroupCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -171,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   WelcomeRoute: WelcomeRoute,
+  GroupCodeRoute: GroupCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
