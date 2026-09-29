@@ -154,6 +154,95 @@ export type Database = {
         }
         Relationships: []
       }
+      stack_checklist_items: {
+        Row: {
+          created_at: string
+          detail: string | null
+          done: boolean
+          id: string
+          kind: string
+          label: string
+          owner: string | null
+          sort_order: number
+          stack_item_id: string
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          done?: boolean
+          id?: string
+          kind?: string
+          label: string
+          owner?: string | null
+          sort_order?: number
+          stack_item_id: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          done?: boolean
+          id?: string
+          kind?: string
+          label?: string
+          owner?: string | null
+          sort_order?: number
+          stack_item_id?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stack_checklist_items_stack_item_id_fkey"
+            columns: ["stack_item_id"]
+            isOneToOne: false
+            referencedRelation: "stack_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stack_items: {
+        Row: {
+          answers: Json | null
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          source: string
+          stage: string
+          tool_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          source?: string
+          stage?: string
+          tool_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          source?: string
+          stage?: string
+          tool_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
