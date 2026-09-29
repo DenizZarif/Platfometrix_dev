@@ -125,6 +125,63 @@ function GuidePage() {
             vendor quote, not as a quote itself.
           </p>
         </div>
+
+        <h2 className="font-display mt-16 text-2xl font-bold tracking-tight">
+          Getting started with implementation
+        </h2>
+        <p className="mt-4 text-muted-foreground">
+          Picking the right tool is half the job — how you roll it out decides whether it actually
+          gets used. A few basics apply no matter which tool or category you chose. For the
+          tool-specific version of this, open "Show implementation plan" on any result card.
+        </p>
+        <div className="mt-6 space-y-8 text-muted-foreground">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-foreground">A rollout checklist</h3>
+            <ul className="mt-3 list-disc space-y-1 pl-4">
+              <li>Name a single owner for the rollout before you start, not after.</li>
+              <li>Start with one real use case or team, not a full replacement on day one.</li>
+              <li>Get your data and access model right before go-live, not after.</li>
+              <li>Train a small group of power users first, then widen access.</li>
+              <li>
+                Decide up front what "adopted" looks like — a specific usage signal you can check —
+                not just "it's live".
+              </li>
+              <li>
+                Plan for whatever review your security and compliance team will want, even
+                informally, before rollout rather than after someone asks.
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-display text-lg font-semibold text-foreground">Common pitfalls</h3>
+            <ul className="mt-3 list-disc space-y-1 pl-4">
+              <li>
+                Trying to rebuild every report, field or workflow from the old system on day one
+                instead of starting lean.
+              </li>
+              <li>Treating go-live as the finish line rather than the start of an ongoing practice.</li>
+              <li>No named owner once the initial project wraps up.</li>
+              <li>
+                Underestimating the data cleanup and integration work — it's usually the software
+                cost that's overestimated, not this.
+              </li>
+              <li>Skipping training and assuming adoption will happen on its own.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-display text-lg font-semibold text-foreground">Managing the change</h3>
+            <p className="mt-3">
+              The technical rollout is rarely what sinks an implementation — the human side is.
+              Explain why the change is happening, not just what's changing. Find a champion on each
+              team who actually uses the tool and can help others. Where practical, run the old and
+              new systems side by side briefly instead of a hard cutover. And in the first few
+              weeks, collect feedback and visibly act on some of it — nothing builds adoption faster
+              than people seeing their complaints turn into changes.
+            </p>
+          </div>
+        </div>
       </section>
     </AppShell>
   );
