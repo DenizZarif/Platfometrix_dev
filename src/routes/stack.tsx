@@ -8,7 +8,8 @@ import type { Category } from "@/lib/categories";
 import type { BiTool } from "@/data/biTools";
 import type { CrmTool } from "@/data/crmTools";
 import type { WarehouseTool } from "@/data/warehouseTools";
-import { fetchProfile } from "@/lib/profileStore";
+import { fetchProfile, type Profile } from "@/lib/profileStore";
+import { cn } from "@/lib/utils";
 import {
   buildBiImplementationPlan,
   buildCrmImplementationPlan,
@@ -16,6 +17,8 @@ import {
 } from "@/lib/implementationPlan";
 import {
   addChecklistItem,
+  bulkAddStackItems,
+  type BulkStackRow,
   addManualStackItem,
   deleteChecklistItem,
   deleteStackItem,
@@ -68,7 +71,9 @@ function StackPage() {
   const [items, setItems] = useState<StackItem[]>([]);
   const [name, setName] = useState("");
   const [cat, setCat] = useState<string>("");
+  const [itemType, setItemType] = useState<"tool" | "data_source">("tool");
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<StackItem["stage"] | "all">("all");
 
   const reload = useCallback(() => {
     if (!user) return;
@@ -100,14 +105,17 @@ function StackPage() {
     if (!name.trim()) return;
     setError(null);
     try {
-      await addManualStackItem(user.id, name.trim(), (cat || null) as Category | null);
+      await addManualStackItem(user.id, name.trim(), (cat || null) as Category | null, itemType);
       setName("");
       setCat("");
+      setItemType("tool");
       reload();
     } catch {
       setError("Couldn't add that tool — please try again.");
     }
   };
+
+  const visible = filter === "all" ? items : items.filter((i) => i.stage === filter);
 
   return (
     <AppShell>
@@ -139,6 +147,15 @@ function StackPage() {
               <option value="crm">CRM</option>
               <option value="warehouse">Data Warehouse</option>
             </select>
+            <select
+              aria-label="Type"
+              className={inputClass}
+              value={itemType}
+              onChange={(e) => setItemType(e.target.value as "tool" | "data_source")}
+            >
+              <option value="tool">Tool / App / Software</option>
+              <option value="data_source">Data source</option>
+            </select>
             <button type="submit" className="btn-accent" disabled={!name.trim()}>
               Add tool
             </button>
@@ -146,19 +163,173 @@ function StackPage() {
           {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
         </form>
 
+        <BulkImport userId={user.id} onDone={reload} />
+
         {items.length === 0 ? (
           <p className="mt-10 text-muted-foreground">
             Nothing here yet — add a tool manually, or add one from a saved shortlist on your Profile page.
           </p>
         ) : (
-          <div className="mt-10 space-y-4">
-            {items.map((item) => (
-              <StackCard key={item.id} item={item} userId={user.id} onChange={reload} />
-            ))}
-          </div>
+          <>
+            <div className="mt-10 flex flex-wrap gap-2">
+              {[{ value: "all" as const, label: `All (${items.length})` }, ...STAGES].map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setFilter(s.value)}
+                  className={cn(
+                    "rounded-lg border px-3 py-1.5 text-xs",
+                    filter === s.value
+                      ? "border-accent text-accent"
+                      : "border-border text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            {visible.length === 0 ? (
+              <p className="mt-6 text-sm text-muted-foreground">Nothing at this stage.</p>
+            ) : (
+              <div className="mt-6 space-y-4">
+                {visible.map((item) => (
+                  <StackCard key={item.id} item={item} userId={user.id} onChange={reload} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     </AppShell>
+  );
+}
+
+const splitList = (s: string | null) =>
+  (s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+
+const STAGE_VALUES = STAGES.map((s) => s.value) as string[];
+
+function parseCsv(text: string): { rows: BulkStackRow[]; noName: number } {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim());
+  const cells = lines.map((l) => l.split(",").map((c) => c.trim().replace(/^"(.*)"$/, "$1").trim()));
+  let idx = { name: 0, category: 1, type: 2, stage: 3 };
+  if (cells[0]?.[0]?.toLowerCase() === "name") {
+    const header = cells.shift()!.map((h) => h.toLowerCase());
+    idx = {
+      name: header.indexOf("name"),
+      category: header.indexOf("category"),
+      type: header.indexOf("type"),
+      stage: header.indexOf("stage"),
+    };
+  }
+  const get = (row: string[], i: number) => (i >= 0 ? (row[i] ?? "") : "");
+  const rows: BulkStackRow[] = [];
+  let noName = 0;
+  for (const row of cells) {
+    const name = get(row, idx.name);
+    if (!name) {
+      noName++;
+      continue;
+    }
+    const c = get(row, idx.category).toLowerCase();
+    const t = get(row, idx.type).toLowerCase();
+    const st = get(row, idx.stage).toLowerCase();
+    rows.push({
+      name,
+      category: c === "bi" || c === "crm" || c === "warehouse" ? c : null,
+      itemType: t === "data_source" ? "data_source" : "tool",
+      stage: (STAGE_VALUES.includes(st) ? st : "evaluating") as StackItem["stage"],
+    });
+  }
+  return { rows, noName };
+}
+
+function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileMsg, setProfileMsg] = useState<string | null>(null);
+  const [csvMsg, setCsvMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    fetchProfile(userId).then(setProfile).catch(() => setProfile(null));
+  }, [userId]);
+
+  const tools = splitList(profile?.existing_stack ?? null);
+  const sources = splitList(profile?.digital_assets ?? null);
+
+  const importProfile = async () => {
+    setBusy(true);
+    try {
+      const rows: BulkStackRow[] = [
+        ...tools.map((name) => ({ name, category: null, itemType: "tool" as const, stage: "evaluating" as const })),
+        ...sources.map((name) => ({ name, category: null, itemType: "data_source" as const, stage: "evaluating" as const })),
+      ];
+      const r = await bulkAddStackItems(userId, rows);
+      setProfileMsg(`Added ${r.added}, skipped ${r.skipped} already in your stack`);
+      onDone();
+    } catch {
+      setProfileMsg("Couldn't import — please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { rows, noName } = parseCsv(await file.text());
+      const r = await bulkAddStackItems(userId, rows);
+      setCsvMsg(
+        `Imported ${r.added}, skipped ${r.skipped}` +
+          (noName ? `. ${noName} row${noName === 1 ? " had" : "s had"} no name and ${noName === 1 ? "was" : "were"} skipped.` : ""),
+      );
+      onDone();
+    } catch {
+      setCsvMsg("Couldn't import that file — please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+      <h2 className="font-display text-xl font-semibold">Import your stack in bulk</h2>
+      <div className="mt-4">
+        {tools.length || sources.length ? (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Found {tools.length} item{tools.length === 1 ? "" : "s"} in 'Tools you already use' and{" "}
+              {sources.length} in 'Other systems or data you run'
+            </p>
+            <button onClick={() => void importProfile()} disabled={busy} className="btn-accent mt-3 disabled:opacity-40">
+              Import from your profile
+            </button>
+            {profileMsg && <p className="mt-2 text-sm text-accent">{profileMsg}</p>}
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Add tools in 'Company details' on your Profile page to import them here
+          </p>
+        )}
+      </div>
+      <label className="mt-6 block">
+        <span className="text-sm font-medium">Or upload a CSV</span>
+        <span className="mt-1 block text-xs text-muted-foreground">
+          Columns: name (required), category (bi/crm/warehouse, optional), type (tool/data_source,
+          optional), stage (optional).
+        </span>
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          disabled={busy}
+          onChange={(e) => void onFile(e)}
+          className="mt-2 block text-sm text-muted-foreground"
+        />
+      </label>
+      {csvMsg && <p className="mt-2 text-sm text-accent">{csvMsg}</p>}
+    </div>
   );
 }
 
@@ -174,6 +345,9 @@ function StackCard({ item, userId, onChange }: { item: StackItem; userId: string
           <div className="flex items-center gap-3">
             <h2 className="font-display text-xl font-semibold">{item.name}</h2>
             <span className="badge">{item.category ? CATEGORY_LABEL[item.category] : "Other"}</span>
+            <span className="text-xs text-muted-foreground">
+              {item.item_type === "data_source" ? "Data source" : "Tool"}
+            </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {item.source === "saved_result" && item.category
