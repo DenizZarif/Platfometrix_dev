@@ -210,6 +210,7 @@ export type Database = {
           category: string | null
           created_at: string
           id: string
+          item_type: string
           name: string
           source: string
           stage: string
@@ -222,6 +223,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           id?: string
+          item_type?: string
           name: string
           source?: string
           stage?: string
@@ -234,6 +236,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           id?: string
+          item_type?: string
           name?: string
           source?: string
           stage?: string

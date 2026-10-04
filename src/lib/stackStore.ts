@@ -10,6 +10,7 @@ export interface StackItem {
   answers: Answers | null;
   stage: "evaluating" | "implementing" | "live" | "under_review" | "retired";
   source: "manual" | "saved_result";
+  item_type: "tool" | "data_source";
   created_at: string;
 }
 
@@ -27,7 +28,7 @@ export interface StackChecklistItem {
 export async function listStackItems(userId: string): Promise<StackItem[]> {
   const { data, error } = await supabase
     .from("stack_items")
-    .select("id, category, tool_id, name, answers, stage, source, created_at")
+    .select("id, category, tool_id, name, answers, stage, source, item_type, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -49,8 +50,9 @@ export async function addStackItemFromMatch(
       name: tool.name,
       answers: answers as unknown as never,
       source: "saved_result",
+      item_type: "tool",
     })
-    .select("id, category, tool_id, name, answers, stage, source, created_at")
+    .select("id, category, tool_id, name, answers, stage, source, item_type, created_at")
     .single();
   if (error) throw error;
   return data as unknown as StackItem;
@@ -60,11 +62,12 @@ export async function addManualStackItem(
   userId: string,
   name: string,
   category: Category | null,
+  itemType: "tool" | "data_source" = "tool",
 ): Promise<StackItem> {
   const { data, error } = await supabase
     .from("stack_items")
-    .insert({ user_id: userId, name, category, source: "manual" })
-    .select("id, category, tool_id, name, answers, stage, source, created_at")
+    .insert({ user_id: userId, name, category, item_type: itemType, source: "manual" })
+    .select("id, category, tool_id, name, answers, stage, source, item_type, created_at")
     .single();
   if (error) throw error;
   return data as unknown as StackItem;
@@ -137,4 +140,34 @@ export async function updateChecklistItemFields(
 export async function deleteChecklistItem(id: string): Promise<void> {
   const { error } = await supabase.from("stack_checklist_items").delete().eq("id", id);
   if (error) throw error;
+}
+
+export interface BulkStackRow {
+  name: string;
+  category: Category | null;
+  itemType: "tool" | "data_source";
+  stage: StackItem["stage"];
+}
+
+export async function bulkAddStackItems(
+  userId: string,
+  rows: BulkStackRow[],
+): Promise<{ added: number; skipped: number }> {
+  const existing = await listStackItems(userId);
+  const existingNames = new Set(existing.map((i) => i.name.trim().toLowerCase()));
+  const toInsert = rows.filter((r) => r.name.trim() && !existingNames.has(r.name.trim().toLowerCase()));
+  const skipped = rows.length - toInsert.length;
+  if (toInsert.length === 0) return { added: 0, skipped };
+  const { error } = await supabase.from("stack_items").insert(
+    toInsert.map((r) => ({
+      user_id: userId,
+      name: r.name.trim(),
+      category: r.category,
+      item_type: r.itemType,
+      stage: r.stage,
+      source: "manual",
+    })),
+  );
+  if (error) throw error;
+  return { added: toInsert.length, skipped };
 }
