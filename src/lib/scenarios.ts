@@ -86,4 +86,30 @@ export const SCENARIOS: Record<Category, Scenario[]> = {
       weights: { budget_fit: 10, data_scale_fit: 10, workload_fit: 10, ux_complexity_fit: 10, deployment_fit: 10, cloud_provider_fit: 10, pipeline_ingestion_fit: 10, real_time_fit: 5, customization_fit: 5, security_soft_fit: 65 },
     },
   ],
+  erp: [
+    {
+      id: "cost-conscious",
+      label: "Cost-conscious",
+      blurb: "Prioritizes staying within budget above everything else",
+      weights: { budget_fit: 65, size_fit: 10, industry_fit: 10, customization_fit: 10, ux_complexity_fit: 10, entity_fit: 5, connector_richness_fit: 5, implementation_effort_fit: 10, security_soft_fit: 5 },
+    },
+    {
+      id: "best-functionality",
+      label: "Best functionality",
+      blurb: "Prioritizes deeper features and capabilities over cost or ease of use",
+      weights: { budget_fit: 5, size_fit: 10, industry_fit: 30, customization_fit: 15, ux_complexity_fit: 5, entity_fit: 20, connector_richness_fit: 20, implementation_effort_fit: 5, security_soft_fit: 5 },
+    },
+    {
+      id: "easiest-to-adopt",
+      label: "Easiest to adopt",
+      blurb: "Prioritizes a gentle learning curve and out-of-the-box fit",
+      weights: { budget_fit: 10, size_fit: 10, industry_fit: 10, customization_fit: 20, ux_complexity_fit: 35, entity_fit: 5, connector_richness_fit: 5, implementation_effort_fit: 30, security_soft_fit: 5 },
+    },
+    {
+      id: "compliance-first",
+      label: "Compliance-first",
+      blurb: "Prioritizes strong security and compliance credentials",
+      weights: { budget_fit: 10, size_fit: 10, industry_fit: 10, customization_fit: 5, ux_complexity_fit: 10, entity_fit: 5, connector_richness_fit: 10, implementation_effort_fit: 5, security_soft_fit: 65 },
+    },
+  ],
 };

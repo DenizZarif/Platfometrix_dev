@@ -157,6 +157,12 @@ function GuidePage() {
                 Plan for whatever review your security and compliance team will want, even
                 informally, before rollout rather than after someone asks.
               </li>
+              <li>
+                For an ERP, clean up your chart of accounts, customer, vendor and item data before
+                migrating — not during.
+              </li>
+              <li>For an ERP, cut over at a period or quarter boundary so opening balances are clean.</li>
+              <li>For an ERP, budget roughly 2–3x the annual licence for implementation.</li>
             </ul>
           </div>
 
