@@ -12,13 +12,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Start a new BI, CRM or data warehouse match and revisit the shortlists you've already saved.",
+          "Start a new BI, CRM, data warehouse or ERP match and revisit the shortlists you've already saved.",
       },
       { property: "og:title", content: "Platfometrix — Software Tool Matcher" },
       {
         property: "og:description",
         content:
-          "Personalized, transparent shortlists for BI, CRM and data warehouse tools, scored against your budget and team.",
+          "Personalized, transparent shortlists for BI, CRM, data warehouse and ERP tools, scored against your budget and team.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -66,7 +66,7 @@ function Dashboard() {
           the reasoning and an estimated cost behind every result.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
           {(Object.keys(CATEGORY_CONFIG) as Category[]).map((c) => {
             const cfg = CATEGORY_CONFIG[c];
             return (

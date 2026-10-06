@@ -8,7 +8,7 @@ export const Route = createFileRoute("/guide")({
       {
         name: "description",
         content:
-          "How Platfometrix filters and scores BI, CRM and data warehouse tools against your answers, and how to read your score breakdown and cost estimate.",
+          "How Platfometrix filters and scores BI, CRM, data warehouse and ERP tools against your answers, and how to read your score breakdown and cost estimate.",
       },
       { property: "og:title", content: "Guide — How Platfometrix Works" },
       {
@@ -105,6 +105,13 @@ function GuidePage() {
             Ingestion is scored as a capability of each platform rather than as a separate category
             of tool, because an ELT tool isn't a substitute for a warehouse.
           </p>
+          <p>
+            <span className="font-display font-semibold text-foreground">ERP</span> — the system
+            that runs your back office: finance and accounting, inventory and orders, manufacturing
+            or project billing, and the reporting across all of it. Scored on company size, your
+            core business need, entity structure, deployment, who'll own it day to day and how heavy
+            an implementation you can take on.
+          </p>
         </div>
 
         <h2 className="font-display mt-16 text-2xl font-bold tracking-tight">
@@ -150,6 +157,12 @@ function GuidePage() {
                 Plan for whatever review your security and compliance team will want, even
                 informally, before rollout rather than after someone asks.
               </li>
+              <li>
+                For an ERP, clean up your chart of accounts, customer, vendor and item data before
+                migrating — not during.
+              </li>
+              <li>For an ERP, cut over at a period or quarter boundary so opening balances are clean.</li>
+              <li>For an ERP, budget roughly 2–3x the annual licence for implementation.</li>
             </ul>
           </div>
 

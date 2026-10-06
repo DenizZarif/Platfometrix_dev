@@ -109,7 +109,7 @@ export const Route = createFileRoute("/match")({
       {
         name: "description",
         content:
-          "Answer a few questions about budget, team and setup and get a ranked, explained shortlist of BI, CRM or data warehouse tools.",
+          "Answer a few questions about budget, team and setup and get a ranked, explained shortlist of BI, CRM, data warehouse or ERP tools.",
       },
       { property: "og:title", content: "New Match — Platfometrix" },
       {
@@ -280,7 +280,7 @@ function CategoryPicker({ onPick }: { onPick: (c: Category) => void }) {
         explained shortlist.
       </p>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-12 grid gap-4 sm:grid-cols-2">
         {(Object.keys(CATEGORY_CONFIG) as Category[]).map((c) => {
           const cfg = CATEGORY_CONFIG[c];
           return (

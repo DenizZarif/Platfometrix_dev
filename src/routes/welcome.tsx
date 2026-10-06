@@ -9,13 +9,13 @@ export const Route = createFileRoute("/welcome")({
       {
         name: "description",
         content:
-          "Find the BI, CRM or data warehouse tool that actually fits your team.",
+          "Find the BI, CRM, data warehouse or ERP tool that actually fits your team.",
       },
       { property: "og:title", content: "Welcome — Platfometrix" },
       {
         property: "og:description",
         content:
-          "Find the BI, CRM or data warehouse tool that actually fits your team.",
+          "Find the BI, CRM, data warehouse or ERP tool that actually fits your team.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -52,7 +52,7 @@ function WelcomePage() {
           Platfometrix
         </h1>
         <p className="text-lg text-muted-foreground">
-          Find the BI, CRM or data warehouse tool that actually fits your team.
+          Find the BI, CRM, data warehouse or ERP tool that actually fits your team.
         </p>
 
         <div className="flex flex-col gap-3">

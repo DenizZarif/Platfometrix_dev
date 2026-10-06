@@ -1,17 +1,19 @@
 import { STEPS, QUESTIONS, type Answers, type Question } from "@/lib/questions";
 import { CRM_STEPS, CRM_QUESTIONS } from "@/lib/questionsCrm";
 import { WAREHOUSE_STEPS, WAREHOUSE_QUESTIONS } from "@/lib/questionsWarehouse";
+import { ERP_STEPS, ERP_QUESTIONS } from "@/lib/questionsErp";
 import { matchTools } from "@/lib/matcher";
 import { matchCrmTools } from "@/lib/matcherCrm";
 import { matchWarehouseTools } from "@/lib/matcherWarehouse";
+import { matchErpTools } from "@/lib/matcherErp";
 import type { ShortlistResult } from "@/components/ResultCard";
 
-export type Category = "bi" | "crm" | "warehouse";
+export type Category = "bi" | "crm" | "warehouse" | "erp";
 
-export const CATEGORIES: Category[] = ["bi", "crm", "warehouse"];
+export const CATEGORIES: Category[] = ["bi", "crm", "warehouse", "erp"];
 
 export function isCategory(v: unknown): v is Category {
-  return v === "bi" || v === "crm" || v === "warehouse";
+  return v === "bi" || v === "crm" || v === "warehouse" || v === "erp";
 }
 
 export const CATEGORY_CONFIG: Record<
@@ -72,6 +74,21 @@ export const CATEGORY_CONFIG: Record<
       "This isn't another \"best data warehouse\" list — it's a personalized match scored against your scale, workload, cloud setup and how much infrastructure you want to manage.",
     headerNote: "Data warehouse matcher",
   },
+  erp: {
+    label: "ERP",
+    tagline: "Finance, inventory, operations and orders in one system.",
+    steps: ERP_STEPS,
+    questions: ERP_QUESTIONS,
+    toolCount: 15,
+    headline: (
+      <>
+        Find the ERP that <span className="text-accent">actually fits</span> your business
+      </>
+    ),
+    blurb:
+      "This isn't another \"best ERP\" list — it's a personalized match scored against your size, budget, industry needs, entity structure and how much implementation effort you can take on.",
+    headerNote: "ERP matcher",
+  },
 };
 
 export const MATCHERS: Record<
@@ -81,4 +98,5 @@ export const MATCHERS: Record<
   bi: matchTools,
   crm: matchCrmTools,
   warehouse: matchWarehouseTools,
+  erp: matchErpTools,
 };

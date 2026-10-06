@@ -155,7 +155,12 @@ export async function bulkAddStackItems(
 ): Promise<{ added: number; skipped: number }> {
   const existing = await listStackItems(userId);
   const existingNames = new Set(existing.map((i) => i.name.trim().toLowerCase()));
-  const toInsert = rows.filter((r) => r.name.trim() && !existingNames.has(r.name.trim().toLowerCase()));
+  const toInsert = rows.filter((r) => {
+    const key = r.name.trim().toLowerCase();
+    if (!key || existingNames.has(key)) return false;
+    existingNames.add(key); // also skip repeats within this batch
+    return true;
+  });
   const skipped = rows.length - toInsert.length;
   if (toInsert.length === 0) return { added: 0, skipped };
   const { error } = await supabase.from("stack_items").insert(
