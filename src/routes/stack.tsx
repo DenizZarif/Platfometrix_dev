@@ -434,7 +434,9 @@ function Checklist({ item, userId }: { item: StackItem; userId: string }) {
           ? buildBiImplementationPlan(tool as BiTool, item.answers, profile)
           : item.category === "crm"
             ? buildCrmImplementationPlan(tool as CrmTool, item.answers, profile)
-            : buildWarehouseImplementationPlan(tool as WarehouseTool, item.answers, profile);
+            : item.category === "erp"
+              ? buildErpImplementationPlan(tool as ErpTool, item.answers, profile)
+              : buildWarehouseImplementationPlan(tool as WarehouseTool, item.answers, profile);
       await seedSetupChecklist(item.id, plan.actionPlan);
       load();
     } finally {

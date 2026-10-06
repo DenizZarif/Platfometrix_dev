@@ -105,6 +105,13 @@ function GuidePage() {
             Ingestion is scored as a capability of each platform rather than as a separate category
             of tool, because an ELT tool isn't a substitute for a warehouse.
           </p>
+          <p>
+            <span className="font-display font-semibold text-foreground">ERP</span> — the system
+            that runs your back office: finance and accounting, inventory and orders, manufacturing
+            or project billing, and the reporting across all of it. Scored on company size, your
+            core business need, entity structure, deployment, who'll own it day to day and how heavy
+            an implementation you can take on.
+          </p>
         </div>
 
         <h2 className="font-display mt-16 text-2xl font-bold tracking-tight">
