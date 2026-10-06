@@ -25,6 +25,17 @@ export const NEGOTIATION_ASKS: Record<string, string> = {
     "Ask whether ingestion pipelines can be exported or ported, or if they're vendor-specific configuration you'd have to rebuild elsewhere.",
   migration_mentioned:
     "The vendor's own materials flag migration cost — ask them directly what that looks like in practice, before you sign, not after.",
+  // ERP
+  multi_entity_advanced:
+    "Confirm which modules are bundled versus sold separately (consolidation, intercompany, multi-currency), and that a sandbox / non-production environment is included at no extra licence cost.",
+  deployment_cloud_only:
+    "Get a contractual right to export all your data in an open format at exit, plus a transition-assistance clause covering the wind-down period.",
+  long_commitment:
+    "Negotiate a cap on renewal uplifts and a 12-month price lock, and the right to reduce user counts or downgrade modules at renewal.",
+  consumption_pricing:
+    "Get the consumption metering explained in writing — what counts as usage, how it's measured, and the overage rates if you exceed your tier.",
+  erp_migration_from_current:
+    "Ask for a fixed-fee, milestone-based implementation statement of work with named resources, covering data migration from your current system.",
 };
 
 export const UNIVERSAL_NEGOTIATION_TIP =
