@@ -109,7 +109,7 @@ export const Route = createFileRoute("/match")({
       {
         name: "description",
         content:
-          "Answer a few questions about budget, team and setup and get a ranked, explained shortlist of BI, CRM or data warehouse tools.",
+          "Answer a few questions about budget, team and setup and get a ranked, explained shortlist of BI, CRM, data warehouse or ERP tools.",
       },
       { property: "og:title", content: "New Match — Platfometrix" },
       {

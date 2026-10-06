@@ -8,7 +8,7 @@ export const Route = createFileRoute("/guide")({
       {
         name: "description",
         content:
-          "How Platfometrix filters and scores BI, CRM and data warehouse tools against your answers, and how to read your score breakdown and cost estimate.",
+          "How Platfometrix filters and scores BI, CRM, data warehouse and ERP tools against your answers, and how to read your score breakdown and cost estimate.",
       },
       { property: "og:title", content: "Guide — How Platfometrix Works" },
       {

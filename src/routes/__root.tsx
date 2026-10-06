@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Platfometrix" },
       {
         name: "description",
-        content: "Transparent software matching for BI, CRM and data warehouse tools.",
+        content: "Transparent software matching for BI, CRM, data warehouse and ERP tools.",
       },
       { name: "author", content: "Platfometrix" },
       { property: "og:type", content: "website" },
