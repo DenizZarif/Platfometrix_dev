@@ -1,0 +1,3 @@
+alter table public.group_sessions drop constraint if exists group_sessions_category_check, add constraint group_sessions_category_check check (category in ('bi','crm','warehouse','erp'));
+alter table public.saved_results drop constraint if exists saved_results_category_check, add constraint saved_results_category_check check (category in ('bi','crm','warehouse','erp'));
+alter table public.stack_items drop constraint if exists stack_items_category_check, add constraint stack_items_category_check check (category in ('bi','crm','warehouse','erp'));
