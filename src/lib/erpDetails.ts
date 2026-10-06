@@ -82,7 +82,7 @@ export function buildErpImplementationPlan(
       },
       {
         phase: "Configuration & integrations",
-        description: `Configure ${tool.customization_level === "ootb" ? "the standard" : tool.customization_level} workflows, approvals and permissions, then connect banking, CRM and other systems.`,
+        description: `Configure ${tool.customization_level === "ootb" ? "the standard" : tool.customization_level === "composable" ? "custom" : "your"} workflows, approvals and permissions, then connect banking, CRM and other systems.`,
         duration: d[2],
       },
       {
