@@ -66,7 +66,7 @@ function Dashboard() {
           the reasoning and an estimated cost behind every result.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
           {(Object.keys(CATEGORY_CONFIG) as Category[]).map((c) => {
             const cfg = CATEGORY_CONFIG[c];
             return (

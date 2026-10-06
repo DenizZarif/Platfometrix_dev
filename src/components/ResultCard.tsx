@@ -2,6 +2,9 @@ import { useState } from "react";
 import { BI_TOOLS, type BiTool } from "@/data/biTools";
 import { CRM_TOOLS, type CrmTool } from "@/data/crmTools";
 import { WAREHOUSE_TOOLS, type WarehouseTool } from "@/data/warehouseTools";
+import { ERP_TOOLS, type ErpTool } from "@/data/erpTools";
+import { buildErpImplementationPlan, buildErpExitRisk, buildErpFitProfile } from "@/lib/erpDetails";
+import { buildErpMigrationEstimate } from "@/lib/migrationEstimateErp";
 import { buildBiExitRisk, buildCrmExitRisk, buildWarehouseExitRisk } from "@/lib/exitRisk";
 import { buildNegotiationChecklist } from "@/lib/negotiationChecklist";
 import type { CriterionResult } from "@/lib/matcher";
@@ -41,7 +44,7 @@ export interface ShortlistResult {
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
-type ResultCategory = "bi" | "crm" | "warehouse";
+type ResultCategory = "bi" | "crm" | "warehouse" | "erp";
 
 export function resolveTool(
   category: ResultCategory,
@@ -52,6 +55,9 @@ export function resolveTool(
   }
   if (category === "crm") {
     return CRM_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as CrmTool);
+  }
+  if (category === "erp") {
+    return ERP_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as ErpTool);
   }
   return (
     WAREHOUSE_TOOLS.find((candidate) => candidate.id === resultTool.id) ??
@@ -94,6 +100,21 @@ function buildDetails(
       marketAdoption: tool.market_adoption,
       migrationEstimate: buildCrmMigrationEstimate(
         currentOf("current_crm_tool"),
+        tool,
+        answers,
+        profile,
+      ),
+    };
+  }
+  if (category === "erp") {
+    const tool = resolvedTool as ErpTool;
+    return {
+      implementationPlan: buildErpImplementationPlan(tool, answers, profile),
+      exitRisk: buildErpExitRisk(tool, answers),
+      fitProfile: buildErpFitProfile(tool),
+      marketAdoption: tool.market_adoption,
+      migrationEstimate: buildErpMigrationEstimate(
+        currentOf("current_erp_tool"),
         tool,
         answers,
         profile,

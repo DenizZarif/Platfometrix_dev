@@ -8,6 +8,8 @@ import type { Category } from "@/lib/categories";
 import type { BiTool } from "@/data/biTools";
 import type { CrmTool } from "@/data/crmTools";
 import type { WarehouseTool } from "@/data/warehouseTools";
+import type { ErpTool } from "@/data/erpTools";
+import { buildErpImplementationPlan } from "@/lib/erpDetails";
 import { fetchProfile, type Profile } from "@/lib/profileStore";
 import { cn } from "@/lib/utils";
 import {
@@ -56,7 +58,7 @@ export const Route = createFileRoute("/stack")({
 const inputClass =
   "rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent";
 
-const CATEGORY_LABEL: Record<Category, string> = { bi: "BI", crm: "CRM", warehouse: "Data Warehouse" };
+const CATEGORY_LABEL: Record<Category, string> = { bi: "BI", crm: "CRM", warehouse: "Data Warehouse", erp: "ERP" };
 
 const STAGES: { value: StackItem["stage"]; label: string }[] = [
   { value: "evaluating", label: "Evaluating" },
@@ -146,6 +148,7 @@ function StackPage() {
               <option value="bi">BI</option>
               <option value="crm">CRM</option>
               <option value="warehouse">Data Warehouse</option>
+              <option value="erp">ERP</option>
             </select>
             <select
               aria-label="Type"
@@ -235,7 +238,7 @@ function parseCsv(text: string): { rows: BulkStackRow[]; noName: number } {
     const st = get(row, idx.stage).toLowerCase();
     rows.push({
       name,
-      category: c === "bi" || c === "crm" || c === "warehouse" ? c : null,
+      category: c === "bi" || c === "crm" || c === "warehouse" || c === "erp" ? c : null,
       itemType: t === "data_source" ? "data_source" : "tool",
       stage: (STAGE_VALUES.includes(st) ? st : "evaluating") as StackItem["stage"],
     });
@@ -317,7 +320,7 @@ function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) 
       <label className="mt-6 block">
         <span className="text-sm font-medium">Or upload a CSV</span>
         <span className="mt-1 block text-xs text-muted-foreground">
-          Columns: name (required), category (bi/crm/warehouse, optional), type (tool/data_source,
+          Columns: name (required), category (bi/crm/warehouse/erp, optional), type (tool/data_source,
           optional), stage (optional).
         </span>
         <input

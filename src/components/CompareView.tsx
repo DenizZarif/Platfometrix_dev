@@ -1,6 +1,8 @@
 import { BI_TOOLS, type BiTool } from "@/data/biTools";
 import { CRM_TOOLS, type CrmTool } from "@/data/crmTools";
 import { WAREHOUSE_TOOLS, type WarehouseTool } from "@/data/warehouseTools";
+import { ERP_TOOLS, type ErpTool } from "@/data/erpTools";
+import { buildErpImplementationPlan, buildErpFitProfile } from "@/lib/erpDetails";
 import type { Answers } from "@/lib/questions";
 import type { Profile } from "@/lib/profileStore";
 import {
@@ -15,7 +17,7 @@ import {
 } from "@/lib/fitProfile";
 import type { ShortlistResult, ShortlistTool } from "@/components/ResultCard";
 
-type ResultCategory = "bi" | "crm" | "warehouse";
+type ResultCategory = "bi" | "crm" | "warehouse" | "erp";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
@@ -33,6 +35,10 @@ function planFor(
     const tool = CRM_TOOLS.find((c) => c.id === resultTool.id) ?? (resultTool as CrmTool);
     return buildCrmImplementationPlan(tool, answers, profile);
   }
+  if (category === "erp") {
+    const tool = ERP_TOOLS.find((c) => c.id === resultTool.id) ?? (resultTool as ErpTool);
+    return buildErpImplementationPlan(tool, answers, profile);
+  }
   const tool =
     WAREHOUSE_TOOLS.find((c) => c.id === resultTool.id) ?? (resultTool as WarehouseTool);
   return buildWarehouseImplementationPlan(tool, answers, profile);
@@ -46,6 +52,10 @@ function detailsFor(category: ResultCategory, resultTool: ShortlistTool) {
   if (category === "crm") {
     const tool = CRM_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as CrmTool);
     return { marketAdoption: tool.market_adoption, fitProfile: buildCrmFitProfile(tool) };
+  }
+  if (category === "erp") {
+    const tool = ERP_TOOLS.find((candidate) => candidate.id === resultTool.id) ?? (resultTool as ErpTool);
+    return { marketAdoption: tool.market_adoption, fitProfile: buildErpFitProfile(tool) };
   }
   const tool =
     WAREHOUSE_TOOLS.find((candidate) => candidate.id === resultTool.id) ??
