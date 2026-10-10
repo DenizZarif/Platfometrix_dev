@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { listSavedResults, type SavedResultRow } from "@/lib/profileStore";
 import { CATEGORY_CONFIG, type Category } from "@/lib/categories";
+import { StackGlance } from "@/components/StackGlance";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -85,6 +86,8 @@ function Dashboard() {
             );
           })}
         </div>
+
+        {user && <StackGlance userId={user.id} />}
 
         {user ? (
           <div className="mt-16">

@@ -15,3 +15,4 @@
 - [x] ERP as 4th category (full parity)
 - [x] Bulk import skips duplicates within the same batch
 - [x] My Stack: contract & cost record, edit + notes, CSV export/round-trip import
+- [x] Dashboard: 'Your stack at a glance' overview
