@@ -298,7 +298,7 @@ function parseCsv(text: string): { rows: BulkStackRow[]; noName: number } {
     const period = get(row, "cost_period").toLowerCase();
     r.cost_period = period === "monthly" || period === "annual" ? period : null;
     const cur = get(row, "currency").toUpperCase();
-    r.currency = cur === "EUR" || cur === "USD" || cur === "GBP" ? cur : undefined;
+    if (cur === "EUR" || cur === "USD" || cur === "GBP") r.currency = cur;
     const d = get(row, "renewal_date");
     r.renewal_date = /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d)) ? d : null;
     const ar = get(row, "auto_renews").toLowerCase();
@@ -412,6 +412,7 @@ function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) 
 
 function StackCard({ item, userId, onChange }: { item: StackItem; userId: string; onChange: () => void }) {
   const [stage, setStage] = useState(item.stage);
+  useEffect(() => setStage(item.stage), [item.stage]);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
