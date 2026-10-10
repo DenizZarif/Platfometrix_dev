@@ -30,6 +30,8 @@ import {
   toggleChecklistItem,
   updateChecklistItemFields,
   updateStackItemStage,
+  updateStackItem,
+  stackItemsToCsv,
   type StackChecklistItem,
   type StackItem,
 } from "@/lib/stackStore";
@@ -168,6 +170,16 @@ function StackPage() {
 
         <BulkImport userId={user.id} onDone={reload} />
 
+        <div className="mt-6 flex justify-end">
+          <button
+            className="btn-ghost disabled:opacity-40"
+            disabled={items.length === 0}
+            onClick={() => downloadCsv(items)}
+          >
+            Export CSV
+          </button>
+        </div>
+
         {items.length === 0 ? (
           <p className="mt-10 text-muted-foreground">
             Nothing here yet — add a tool manually, or add one from a saved shortlist on your Profile page.
@@ -211,39 +223,101 @@ const splitList = (s: string | null) =>
 
 const STAGE_VALUES = STAGES.map((s) => s.value) as string[];
 
+function splitCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+  const t = text.replace(/^\uFEFF/, "");
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i]!;
+    if (quoted) {
+      if (ch === '"') {
+        if (t[i + 1] === '"') { cell += '"'; i++; } else quoted = false;
+      } else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ",") { row.push(cell); cell = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && t[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows
+    .map((r) => r.map((c) => c.trim()))
+    .filter((r) => r.some((c) => c));
+}
+
+const EXTRA_COLS = ["owner", "cost", "cost_period", "currency", "seats", "renewal_date", "notice_days", "auto_renews", "vendor_contact", "notes"];
+
+/** Undo the export's formula-injection guard (leading ' before = + - @ tab). */
+const unguard = (v: string) => (/^'[=+\-@\t]/.test(v) ? v.slice(1) : v);
+const nonNegNum = (v: string, int: boolean) => {
+  if (!v) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || (int && !Number.isInteger(n))) return null;
+  return n;
+};
+
 function parseCsv(text: string): { rows: BulkStackRow[]; noName: number } {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  const cells = lines.map((l) => l.split(",").map((c) => c.trim().replace(/^"(.*)"$/, "$1").trim()));
-  let idx = { name: 0, category: 1, type: 2, stage: 3 };
+  const cells = splitCsv(text);
+  let idx: Record<string, number> = { name: 0, category: 1, type: 2, stage: 3 };
   if (cells[0]?.[0]?.toLowerCase() === "name") {
     const header = cells.shift()!.map((h) => h.toLowerCase());
-    idx = {
-      name: header.indexOf("name"),
-      category: header.indexOf("category"),
-      type: header.indexOf("type"),
-      stage: header.indexOf("stage"),
-    };
+    idx = {};
+    for (const k of ["name", "category", "type", "stage", ...EXTRA_COLS]) idx[k] = header.indexOf(k);
   }
-  const get = (row: string[], i: number) => (i >= 0 ? (row[i] ?? "") : "");
+  const get = (row: string[], k: string) => {
+    const i = idx[k] ?? -1;
+    return i >= 0 ? (row[i] ?? "") : "";
+  };
   const rows: BulkStackRow[] = [];
   let noName = 0;
   for (const row of cells) {
-    const name = get(row, idx.name);
+    const name = unguard(get(row, "name"));
     if (!name) {
       noName++;
       continue;
     }
-    const c = get(row, idx.category).toLowerCase();
-    const t = get(row, idx.type).toLowerCase();
-    const st = get(row, idx.stage).toLowerCase();
-    rows.push({
+    const c = get(row, "category").toLowerCase();
+    const t = get(row, "type").toLowerCase();
+    const st = get(row, "stage").toLowerCase();
+    const r: BulkStackRow = {
       name,
       category: c === "bi" || c === "crm" || c === "warehouse" || c === "erp" ? c : null,
       itemType: t === "data_source" ? "data_source" : "tool",
       stage: (STAGE_VALUES.includes(st) ? st : "evaluating") as StackItem["stage"],
-    });
+    };
+    const text = (k: string) => unguard(get(row, k)) || null;
+    r.owner = text("owner");
+    r.vendor_contact = text("vendor_contact");
+    r.notes = text("notes");
+    r.cost_amount = nonNegNum(get(row, "cost"), false);
+    r.seats = nonNegNum(get(row, "seats"), true);
+    r.notice_days = nonNegNum(get(row, "notice_days"), true);
+    const period = get(row, "cost_period").toLowerCase();
+    r.cost_period = period === "monthly" || period === "annual" ? period : null;
+    const cur = get(row, "currency").toUpperCase();
+    if (cur === "EUR" || cur === "USD" || cur === "GBP") r.currency = cur;
+    const d = get(row, "renewal_date");
+    r.renewal_date = /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d)) ? d : null;
+    const ar = get(row, "auto_renews").toLowerCase();
+    r.auto_renews = ar === "yes" || ar === "true" ? true : ar === "no" || ar === "false" ? false : null;
+    rows.push(r);
   }
   return { rows, noName };
+}
+
+function downloadCsv(items: StackItem[]) {
+  const blob = new Blob([stackItemsToCsv(items)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `my-stack-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) {
@@ -321,7 +395,7 @@ function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) 
         <span className="text-sm font-medium">Or upload a CSV</span>
         <span className="mt-1 block text-xs text-muted-foreground">
           Columns: name (required), category (bi/crm/warehouse/erp, optional), type (tool/data_source,
-          optional), stage (optional).
+          optional), stage (optional). A file from Export CSV can be imported back as-is.
         </span>
         <input
           type="file"
@@ -338,8 +412,10 @@ function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) 
 
 function StackCard({ item, userId, onChange }: { item: StackItem; userId: string; onChange: () => void }) {
   const [stage, setStage] = useState(item.stage);
+  useEffect(() => setStage(item.stage), [item.stage]);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
@@ -376,6 +452,9 @@ function StackCard({ item, userId, onChange }: { item: StackItem; userId: string
               </option>
             ))}
           </select>
+          <button className="text-xs text-accent" onClick={() => setEditing((e) => !e)}>
+            {editing ? "Close edit" : "Edit"}
+          </button>
           {confirmRemove ? (
             <>
               <button
@@ -396,6 +475,19 @@ function StackCard({ item, userId, onChange }: { item: StackItem; userId: string
         </div>
       </div>
 
+      {editing ? (
+        <EditPanel
+          item={item}
+          onCancel={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            onChange();
+          }}
+        />
+      ) : (
+        <ContractSummary item={item} />
+      )}
+
       <button
         className="mt-4 text-sm text-accent"
         onClick={() => setOpen((o) => !o)}
@@ -403,6 +495,199 @@ function StackCard({ item, userId, onChange }: { item: StackItem; userId: string
         {open ? "Hide setup checklist" : "Setup checklist"}
       </button>
       {open && <Checklist item={item} userId={userId} />}
+    </div>
+  );
+}
+
+const DAY = 86_400_000;
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+function ContractSummary({ item }: { item: StackItem }) {
+  const parts: string[] = [];
+  if (item.cost_amount != null) {
+    const money = new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: item.currency || "EUR",
+      maximumFractionDigits: item.cost_amount % 1 === 0 ? 0 : 2,
+    }).format(item.cost_amount);
+    parts.push(item.cost_period ? `${money} / ${item.cost_period === "annual" ? "year" : "month"}` : money);
+  }
+  if (item.seats != null) parts.push(`${item.seats} seat${item.seats === 1 ? "" : "s"}`);
+  if (item.owner) parts.push(`Owner: ${item.owner}`);
+
+  let renewal: { text: string; tone: string } | null = null;
+  let notice: string | null = null;
+  if (item.renewal_date) {
+    const r = new Date(`${item.renewal_date.slice(0, 10)}T00:00:00Z`);
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.round((r.getTime() - today) / DAY);
+    if (days < 0) renewal = { text: "Renewal date passed", tone: "text-muted-foreground italic" };
+    else
+      renewal = {
+        text: `Renews ${fmtDate(r)} · ${days === 0 ? "today" : `in ${days} day${days === 1 ? "" : "s"}`}`,
+        tone: days <= 60 ? "text-warning" : "text-muted-foreground",
+      };
+    if (item.notice_days != null) notice = `Notice due by ${fmtDate(new Date(r.getTime() - item.notice_days * DAY))}`;
+  }
+
+  if (!parts.length && !renewal && !item.notes) return null;
+  return (
+    <div className="mt-3 space-y-1 text-sm">
+      {parts.length > 0 && <p className="text-muted-foreground">{parts.join(" · ")}</p>}
+      {renewal && (
+        <p className={renewal.tone}>
+          {renewal.text}
+          {notice && <span> · {notice}</span>}
+          {item.auto_renews != null && <span> · {item.auto_renews ? "Auto-renews" : "Does not auto-renew"}</span>}
+        </p>
+      )}
+      {item.notes && <p className="line-clamp-2 whitespace-pre-line text-muted-foreground">{item.notes}</p>}
+    </div>
+  );
+}
+
+function EditPanel({ item, onCancel, onSaved }: { item: StackItem; onCancel: () => void; onSaved: () => void }) {
+  const [f, setF] = useState({
+    name: item.name,
+    item_type: item.item_type,
+    category: item.category ?? "",
+    stage: item.stage,
+    owner: item.owner ?? "",
+    vendor_contact: item.vendor_contact ?? "",
+    cost_amount: item.cost_amount?.toString() ?? "",
+    cost_period: item.cost_period ?? "",
+    currency: item.currency || "EUR",
+    seats: item.seats?.toString() ?? "",
+    renewal_date: item.renewal_date?.slice(0, 10) ?? "",
+    notice_days: item.notice_days?.toString() ?? "",
+    auto_renews: item.auto_renews == null ? "" : item.auto_renews ? "yes" : "no",
+    notes: item.notes ?? "",
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
+
+  const save = async () => {
+    setError(null);
+    if (!f.name.trim()) return setError("Name is required.");
+    const num = (v: string, label: string, int: boolean): number | null | "bad" => {
+      if (!v.trim()) return null;
+      const n = Number(v);
+      if (!Number.isFinite(n) || n < 0 || (int && !Number.isInteger(n))) {
+        setError(`${label} must be a non-negative ${int ? "whole " : ""}number.`);
+        return "bad";
+      }
+      return n;
+    };
+    const cost = num(f.cost_amount, "Cost", false);
+    const seats = num(f.seats, "Seats", true);
+    const notice = num(f.notice_days, "Notice period", true);
+    if (cost === "bad" || seats === "bad" || notice === "bad") return;
+    const txt = (v: string) => v.trim() || null;
+    setSaving(true);
+    try {
+      await updateStackItem(item.id, {
+        name: f.name,
+        item_type: f.item_type,
+        category: (f.category || null) as Category | null,
+        stage: f.stage,
+        owner: txt(f.owner),
+        vendor_contact: txt(f.vendor_contact),
+        cost_amount: cost,
+        cost_period: (f.cost_period || null) as StackItem["cost_period"],
+        currency: f.currency as StackItem["currency"],
+        seats,
+        renewal_date: f.renewal_date || null,
+        notice_days: notice,
+        auto_renews: f.auto_renews === "" ? null : f.auto_renews === "yes",
+        notes: txt(f.notes),
+      });
+      onSaved();
+    } catch {
+      setError("Couldn't save — please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const field = (label: string, el: React.ReactNode) => (
+    <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+      {label}
+      {el}
+    </label>
+  );
+
+  return (
+    <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {field("Name", <input className={inputClass} value={f.name} onChange={set("name")} />)}
+        {field(
+          "Type",
+          <select className={inputClass} value={f.item_type} onChange={set("item_type")}>
+            <option value="tool">Tool / App / Software</option>
+            <option value="data_source">Data source</option>
+          </select>,
+        )}
+        {field(
+          "Category",
+          <select className={inputClass} value={f.category} onChange={set("category")}>
+            <option value="">Other / none</option>
+            <option value="bi">BI</option>
+            <option value="crm">CRM</option>
+            <option value="warehouse">Data Warehouse</option>
+            <option value="erp">ERP</option>
+          </select>,
+        )}
+        {field(
+          "Stage",
+          <select className={inputClass} value={f.stage} onChange={set("stage")}>
+            {STAGES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>,
+        )}
+        {field("Owner", <input className={inputClass} value={f.owner} onChange={set("owner")} placeholder="Person or team" />)}
+        {field("Vendor contact", <input className={inputClass} value={f.vendor_contact} onChange={set("vendor_contact")} placeholder="Name, email or phone" />)}
+        {field(
+          "Cost",
+          <div className="flex gap-2">
+            <input className={`${inputClass} min-w-0 flex-1`} inputMode="decimal" aria-label="Cost amount" value={f.cost_amount} onChange={set("cost_amount")} />
+            <select className={inputClass} aria-label="Cost period" value={f.cost_period} onChange={set("cost_period")}>
+              <option value="">—</option>
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
+            <select className={inputClass} aria-label="Currency" value={f.currency} onChange={set("currency")}>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>,
+        )}
+        {field("Seats", <input className={inputClass} inputMode="numeric" value={f.seats} onChange={set("seats")} />)}
+        {field("Renewal date", <input type="date" className={inputClass} value={f.renewal_date} onChange={set("renewal_date")} />)}
+        {field("Notice period (days)", <input className={inputClass} inputMode="numeric" value={f.notice_days} onChange={set("notice_days")} />)}
+        {field(
+          "Auto-renews",
+          <select className={inputClass} value={f.auto_renews} onChange={set("auto_renews")}>
+            <option value="">Unknown</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>,
+        )}
+      </div>
+      {field("Notes", <textarea rows={4} className={inputClass} value={f.notes} onChange={set("notes")} />)}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <div className="flex gap-3">
+        <button className="btn-accent disabled:opacity-40" disabled={saving} onClick={() => void save()}>
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button className="btn-ghost" onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }

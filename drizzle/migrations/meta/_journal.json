@@ -8,6 +8,13 @@
       "when": 1791288373640,
       "tag": "0000_allow_erp_category",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791634756161,
+      "tag": "0001_stack_items_contract_fields",
+      "breakpoints": true
     }
   ]
 }

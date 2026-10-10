@@ -14,3 +14,4 @@
 - [x] Vendor negotiation checklist: factorCodes parallel array in exitRisk.ts (additive), negotiationChecklist.ts (NEGOTIATION_ASKS + universal termination tip, dedup), ResultCard "Show negotiation checklist" toggle + "Before you sign" panel right after exit-risk panel; zero-factor tools show only the universal tip. Verified in browser across BI/CRM/warehouse; typecheck and build clean.
 - [x] ERP as 4th category (full parity)
 - [x] Bulk import skips duplicates within the same batch
+- [x] My Stack: contract & cost record, edit + notes, CSV export/round-trip import
