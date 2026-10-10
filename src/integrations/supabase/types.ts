@@ -207,42 +207,72 @@ export type Database = {
       stack_items: {
         Row: {
           answers: Json | null
+          auto_renews: boolean | null
           category: string | null
+          cost_amount: number | null
+          cost_period: string | null
           created_at: string
+          currency: string
           id: string
           item_type: string
           name: string
+          notes: string | null
+          notice_days: number | null
+          owner: string | null
+          renewal_date: string | null
+          seats: number | null
           source: string
           stage: string
           tool_id: string | null
           updated_at: string
           user_id: string
+          vendor_contact: string | null
         }
         Insert: {
           answers?: Json | null
+          auto_renews?: boolean | null
           category?: string | null
+          cost_amount?: number | null
+          cost_period?: string | null
           created_at?: string
+          currency?: string
           id?: string
           item_type?: string
           name: string
+          notes?: string | null
+          notice_days?: number | null
+          owner?: string | null
+          renewal_date?: string | null
+          seats?: number | null
           source?: string
           stage?: string
           tool_id?: string | null
           updated_at?: string
           user_id: string
+          vendor_contact?: string | null
         }
         Update: {
           answers?: Json | null
+          auto_renews?: boolean | null
           category?: string | null
+          cost_amount?: number | null
+          cost_period?: string | null
           created_at?: string
+          currency?: string
           id?: string
           item_type?: string
           name?: string
+          notes?: string | null
+          notice_days?: number | null
+          owner?: string | null
+          renewal_date?: string | null
+          seats?: number | null
           source?: string
           stage?: string
           tool_id?: string | null
           updated_at?: string
           user_id?: string
+          vendor_contact?: string | null
         }
         Relationships: []
       }
