@@ -183,7 +183,7 @@ export async function updateStackItem(id: string, patch: StackItemPatch): Promis
   if (patch.name !== undefined) {
     const n = patch.name.trim();
     if (!n) throw new Error("Name is required");
-    clean.name = n;
+    clean["name"] = n;
   }
   const { error } = await supabase
     .from("stack_items")
