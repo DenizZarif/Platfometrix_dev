@@ -204,6 +204,36 @@ export type Database = {
           },
         ]
       }
+      stack_item_history: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string
+          id: string
+          item_name: string
+          stack_item_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          item_name: string
+          stack_item_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          item_name?: string
+          stack_item_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stack_items: {
         Row: {
           answers: Json | null
@@ -281,7 +311,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      stack_item_snapshot: {
+        Args: { r: Database["public"]["Tables"]["stack_items"]["Row"] }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

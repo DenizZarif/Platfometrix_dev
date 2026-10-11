@@ -12,6 +12,7 @@ import type { ErpTool } from "@/data/erpTools";
 import { buildErpImplementationPlan } from "@/lib/erpDetails";
 import { fetchProfile, type Profile } from "@/lib/profileStore";
 import { cn } from "@/lib/utils";
+import { StackHistory } from "@/components/StackHistory";
 import {
   buildBiImplementationPlan,
   buildCrmImplementationPlan,
@@ -38,6 +39,10 @@ import {
 
 export const Route = createFileRoute("/stack")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>): { tab?: "history"; item?: string } => ({
+    ...(s["tab"] === "history" ? { tab: "history" as const } : {}),
+    ...(typeof s["item"] === "string" && s["item"] ? { item: s["item"] } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "My Stack — Platfometrix" },
@@ -72,6 +77,9 @@ const STAGES: { value: StackItem["stage"]; label: string }[] = [
 
 function StackPage() {
   const { user, loading } = useAuth();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const tab = search.tab === "history" ? "history" : "items";
   const [items, setItems] = useState<StackItem[]>([]);
   const [name, setName] = useState("");
   const [cat, setCat] = useState<string>("");
@@ -121,6 +129,12 @@ function StackPage() {
 
   const visible = filter === "all" ? items : items.filter((i) => i.stage === filter);
 
+  const setSearch = (tab: "items" | "history", item: string | null) =>
+    void navigate({
+      search: tab === "history" ? { tab: "history", ...(item ? { item } : {}) } : {},
+      replace: true,
+    });
+
   return (
     <AppShell>
       <section className="mx-auto max-w-3xl px-6 pt-16 pb-24">
@@ -129,6 +143,32 @@ function StackPage() {
           The tools your company actually runs, and how their rollout is going.
         </p>
 
+        <div className="mt-8 inline-flex rounded-lg border border-border p-1" role="tablist">
+          {(["items", "history"] as const).map((t) => (
+            <button
+              key={t}
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => setSearch(t, null)}
+              className={cn(
+                "rounded-md px-4 py-1.5 text-sm",
+                tab === t ? "bg-accent/10 text-accent" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t === "items" ? "Items" : "History"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "history" ? (
+          <StackHistory
+            userId={user.id}
+            items={items}
+            itemId={search.item ?? null}
+            onItemChange={(id) => setSearch("history", id)}
+          />
+        ) : (
+        <>
         <form onSubmit={(e) => void add(e)} className="mt-10 rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-xl font-semibold">Add a tool manually</h2>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -207,11 +247,19 @@ function StackPage() {
             ) : (
               <div className="mt-6 space-y-4">
                 {visible.map((item) => (
-                  <StackCard key={item.id} item={item} userId={user.id} onChange={reload} />
+                  <StackCard
+                    key={item.id}
+                    item={item}
+                    userId={user.id}
+                    onChange={reload}
+                    onHistory={() => setSearch("history", item.id)}
+                  />
                 ))}
               </div>
             )}
           </>
+        )}
+        </>
         )}
       </section>
     </AppShell>
@@ -410,7 +458,17 @@ function BulkImport({ userId, onDone }: { userId: string; onDone: () => void }) 
   );
 }
 
-function StackCard({ item, userId, onChange }: { item: StackItem; userId: string; onChange: () => void }) {
+function StackCard({
+  item,
+  userId,
+  onChange,
+  onHistory,
+}: {
+  item: StackItem;
+  userId: string;
+  onChange: () => void;
+  onHistory?: () => void;
+}) {
   const [stage, setStage] = useState(item.stage);
   useEffect(() => setStage(item.stage), [item.stage]);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -455,6 +513,11 @@ function StackCard({ item, userId, onChange }: { item: StackItem; userId: string
           <button className="text-xs text-accent" onClick={() => setEditing((e) => !e)}>
             {editing ? "Close edit" : "Edit"}
           </button>
+          {onHistory && (
+            <button className="text-xs text-muted-foreground hover:text-foreground" onClick={onHistory}>
+              History
+            </button>
+          )}
           {confirmRemove ? (
             <>
               <button

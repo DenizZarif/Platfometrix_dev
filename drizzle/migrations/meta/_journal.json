@@ -15,6 +15,13 @@
       "when": 1791634756161,
       "tag": "0001_stack_items_contract_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791714421131,
+      "tag": "0002_stack_item_history",
+      "breakpoints": true
     }
   ]
 }
