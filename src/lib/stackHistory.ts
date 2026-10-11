@@ -141,10 +141,11 @@ export function reconstructItemStates(entries: StackHistoryEntry[]): Reconstruct
     if (e.action === "deleted") {
       deleted = true;
     } else {
-      if (e.action === "baseline" || e.action === "created") { state = {}; deleted = false; }
-      for (const [k, c] of Object.entries(e.changes ?? {})) state[k as TrackedField] = c.to;
+      const next: ItemState = e.action === "baseline" || e.action === "created" ? {} : { ...state };
+      if (e.action !== "updated") deleted = false;
+      for (const [k, c] of Object.entries(e.changes ?? {})) next[k as TrackedField] = c.to;
+      state = next;
     }
-    state = { ...state };
     return { entryId: e.id, state, before, deleted };
   });
 }
