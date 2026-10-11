@@ -49,7 +49,7 @@ export function StackHistory({
     async (before?: string) => {
       setError(null);
       try {
-        const res = await listStackHistory(userId, { itemId: itemId ?? undefined, before });
+        const res = await listStackHistory(userId, { ...(itemId ? { itemId } : {}), ...(before ? { before } : {}) });
         setEntries((prev) => (before && prev ? [...prev, ...res.entries] : res.entries));
         setHasMore(res.hasMore);
       } catch {
@@ -272,11 +272,11 @@ function EntryRow({
             <div className="mt-2 grid gap-3 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold text-muted-foreground">Before</p>
-                <p className="mt-1 whitespace-pre-wrap text-sm">{ch.notes.from == null ? "—" : String(ch.notes.from)}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm">{ch["notes"]!.from == null ? "—" : String(ch["notes"]!.from)}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold text-muted-foreground">After</p>
-                <p className="mt-1 whitespace-pre-wrap text-sm">{ch.notes.to == null ? "—" : String(ch.notes.to)}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm">{ch["notes"]!.to == null ? "—" : String(ch["notes"]!.to)}</p>
               </div>
             </div>
           )}

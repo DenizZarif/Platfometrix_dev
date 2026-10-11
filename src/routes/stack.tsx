@@ -40,8 +40,8 @@ import {
 export const Route = createFileRoute("/stack")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): { tab?: "history"; item?: string } => ({
-    ...(s.tab === "history" ? { tab: "history" as const } : {}),
-    ...(typeof s.item === "string" && s.item ? { item: s.item } : {}),
+    ...(s["tab"] === "history" ? { tab: "history" as const } : {}),
+    ...(typeof s["item"] === "string" && s["item"] ? { item: s["item"] } : {}),
   }),
   head: () => ({
     meta: [

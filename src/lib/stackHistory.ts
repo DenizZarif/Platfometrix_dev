@@ -112,7 +112,7 @@ export function describeEntryChanges(
   const lines: string[] = [];
   const costChanged = COST_FIELDS.some((f) => f in changes);
   if (costChanged && before) {
-    const pick = (f: string, side: "from" | "to") => (f in changes ? changes[f][side] : before[f as TrackedField]);
+    const pick = (f: string, side: "from" | "to") => (f in changes ? changes[f]![side] : before[f as TrackedField]);
     lines.push(
       `Cost: ${formatMoney(pick("cost_amount", "from"), pick("cost_period", "from"), pick("currency", "from"))} → ${formatMoney(pick("cost_amount", "to"), pick("cost_period", "to"), pick("currency", "to"))}`,
     );
@@ -120,7 +120,7 @@ export function describeEntryChanges(
   for (const f of TRACKED_FIELDS) {
     if (!(f in changes)) continue;
     if (costChanged && before && (COST_FIELDS as readonly string[]).includes(f)) continue;
-    lines.push(describeChange(f, changes[f].from, changes[f].to));
+    lines.push(describeChange(f, changes[f]!.from, changes[f]!.to));
   }
   return lines;
 }
